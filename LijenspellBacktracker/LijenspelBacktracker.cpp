@@ -17,7 +17,7 @@ int numCols;
 
 //Used to keep track of number locations in puzzle to speed up backtracking
 struct number {
-	int value, x, y;
+	int value, x, y, remaining;
 };
 
 //Global so we don't have to pass it
@@ -36,8 +36,23 @@ int numSolutions = 0;
 //Checks if you have a solution to the puzzle
 // param puzzle: The puzzle state to check for a solution
 bool isSolved(char** puzzle) {
-
-	return false;
+	//Check all our numbers have their arrows
+	for (int i = 0; i < numNumbers; i++) {
+		if (numbers[i].remaining != 0) {
+			return false;
+		}
+	}
+	//Check all squares are filled
+	for (int n = 0; n < numRows; n++) {
+		for (int m = 0; m < numCols; m++) {
+			//Check if it is an arrow or a number, otherwise blank
+			if (!(isdigit(puzzle[n][m])) && puzzle[n][m] != '<' && puzzle[n][m] != '^' && puzzle[n][m] != 'v' && puzzle[n][m] != '>') {
+				return false;
+			}
+		}
+	}
+	//All squares filled, all numbers have their arrows.
+	return true;
 }
 
 //Checks if we are still working on a good puzzle
@@ -45,8 +60,31 @@ bool isSolved(char** puzzle) {
 //	Make sure every number has space to expand to their needed size
 //  Make sure every empty square can be reached
 bool isValid(char** puzzle) {
+	//First Check Each Number Can Expand
+	int curRemain, x, y;
+	for (int i = 0; i < numNumbers; i++) {
+		//Gather current info
+		curRemain = numbers[i].remaining;
+		x = numbers[i].x;
+		y = numbers[i].y;
+		//Look in each diretion and see if we can get curRemain to 0
+		for (int i = y - 1; i >= 0; i--) {
+			if (puzzle[x][i] != '^') {
+				//Is it empty? Then we could fill it.
+				if (puzzle[x][i] == ' ') {
+					curRemain--;
+				}
+				//Otherwise this direction is done
+				else {
+					break;
+				}
+			}
+		}
+		//Check cur remain, do other directions
+	}
 
-	return false;
+
+	return true;
 }
 
 //The main backtracking function, handles creation of each step of a solution
@@ -64,7 +102,75 @@ void backtracker(char*** solutions, char** puzzle) {
 	}
 	//Keep going, generate next states
 	else {
+		//Are we done with the current number?
+		bool incremented = false;
+		if (numbers[currentNumber].remaining == 0) {
+			currentNumber++;
+			incremented = true;
+			if (currentNumber == numNumbers) {
+				//I don't think we will ever get here
+				currentNumber = 0;
+			}
+		}
 
+		//Recursively call the new arrows we can
+		numbers[currentNumber].remaining--;
+		int x = numbers[currentNumber].x;
+		int y = numbers[currentNumber].y;
+		//Up
+		for (int i = y-1; i >= 0; i--) {
+			if (puzzle[x][i] != '^') {
+				//Is it empty? Then we can fill.
+				if (puzzle[x][i] == ' ') {
+					puzzle[x][i] = '^';
+					backtracker(solutions, puzzle);
+				}
+				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
+				break;
+			}
+		}
+		//Right
+		for (int i = x + 1; i < numCols; i++) {
+			if (puzzle[x][i] != '>') {
+				//Is it empty? Then we can fill.
+				if (puzzle[i][y] == ' ') {
+					puzzle[i][y] = '>';
+					backtracker(solutions, puzzle);
+				}
+				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
+				break;
+			}
+		}
+		//Down
+		for (int i = y+1; i < numRows; i++) {
+			if (puzzle[x][i] != 'v') {
+				//Is it empty? Then we can fill.
+				if (puzzle[x][i] == ' ') {
+					puzzle[x][i] = 'v';
+					backtracker(solutions, puzzle);
+				}
+				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
+				break;
+			}
+		}
+		//Left
+		for (int i = x - 1; i >= 0; i--) {
+			if (puzzle[x][i] != '<') {
+				//Is it empty? Then we can fill.
+				if (puzzle[i][y] == ' ') {
+					puzzle[i][y] = '<';
+					backtracker(solutions, puzzle);
+				}
+				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
+				break;
+			}
+		}
+
+		//If we came back we need to give it its remaining back and go back to our old current number
+		if (incremented) {
+			currentNumber--;
+		}
+		numbers[currentNumber].remaining++;
 		return;
 	}
 }
@@ -104,21 +210,25 @@ int main() {
 	numbers[0].value = 1;
 	numbers[0].x = 1;
 	numbers[0].y = 0;
+	numbers[0].remaining = 1;
 
 	puzzle[0][2] = '3';
 	numbers[1].value = 3;
 	numbers[1].x = 0;
 	numbers[1].y = 2;
+	numbers[0].remaining = 3;
 
 	puzzle[2][3] = '4';
 	numbers[2].value = 4;
 	numbers[2].x = 2;
 	numbers[2].y = 3;
+	numbers[0].remaining = 4;
 
 	puzzle[3][1] = '4';
 	numbers[3].value = 4;
 	numbers[3].x = 3;
 	numbers[3].y = 1;
+	numbers[0].remaining = 4;
 
 	//Sort array of numbers so that we can just do them in order
 	qsort(numbers, numNumbers, sizeof(number), numbersSorter);
