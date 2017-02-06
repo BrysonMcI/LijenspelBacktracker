@@ -3,7 +3,14 @@
 // Rules and puzzles can be found at http://puzzlepicnic.com/genre?id=51.
 // Author: Bryson McIver
 // Created: 2/3/2017
-// Last Update: 2/3/2017
+// Last Update: 2/5/2017
+//
+// Aditional Details:
+//	Only supports basic grid puzzles 9x9 and below
+//  Only support single digit numbers
+//  Missing a way to keep track of old previously reached configurations (This is a limitation
+//    currently due to the fact that I go one arrow at a time).
+//  A 9 9 puzzle considered hard took 13 minutes on my i7 4770.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,13 +59,12 @@ void printPuzzle(char** puzzle) {
 			cout << puzzle[n][m] << " | ";
 		}
 		cout << endl;
+		for (int n = 0; n < numCols; n++) {
+			cout << "|___";
+		}
+		cout << "|" << endl;
 	}
-
-	//Print bottom
-	for (int n = 0; n < numCols; n++) {
-		cout << "____";
-	}
-	cout << endl << endl;
+	cout << endl;
 }
 
 //Checks if you have a solution to the puzzle
@@ -183,6 +189,10 @@ void backtracker(char*** solutions, char** puzzleState) {
 	}
 	//Are we on the right track? If not, bail.
 	else if (!isValid(puzzle)) {
+		for (int n = 0; n < numCols; n++) {
+			delete[]puzzle[n];
+		}
+		delete[]puzzle;
 		return;
 	}
 	//Keep going, generate next states
@@ -276,14 +286,19 @@ void backtracker(char*** solutions, char** puzzleState) {
 		if (incremented) {
 			currentNumber--;
 		}
+		//And clean up memory
+		for (int n = 0; n < numCols; n++) {
+			delete[]puzzle[n];
+		}
+		delete[]puzzle;
 		return;
 	}
 }
 
 //Will sort our numbers for us :)
 //params: the two number structs to sort
-int numbersSorter(const void* num1, const void* num2) {
-	return ((number*)num1)->value > ((number*)num2)->value ? 1 : -1;
+int numbersSorter(number num1, number num2) {
+	return (num1.value > num2.value);
 }
 
 //Entry point for the backtracker, handles IO, printing, and starting the backtracking
@@ -295,8 +310,8 @@ int main() {
 	ifstream file ("puzzle.txt");
 	string buffer;
 	getline(file, buffer);
-	numRows = buffer[0];
-	numCols = buffer[2];
+	numRows = buffer[0] - '0';
+	numCols = buffer[2] - '0';
 
 	//Define Puzzle pointer
 	char** puzzle;
@@ -322,6 +337,9 @@ int main() {
 		}
 	}
 
+	//Close the file
+	file.close();
+
 	//Sort array of numbers so that we can just do them in order
 	sort(numbers.begin(), numbers.end(), numbersSorter);
 
@@ -346,7 +364,7 @@ int main() {
 		//Display Solutions Returned to console
 		//Only does first solution
 
-		cout << "Solutions:" << endl;
+		cout << "Solution:" << endl;
 		printPuzzle(solutions[numSolutions-1]);
 
 	}
