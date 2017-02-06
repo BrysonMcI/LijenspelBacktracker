@@ -10,7 +10,7 @@
 //  Only support single digit numbers.
 //  Missing a way to keep track of old previously reached configurations (This is a limitation
 //    currently due to the fact that I go one arrow at a time).
-//  A 9 9 puzzle considered hard took 13 minutes on my i7 4770.
+//  A 9 9 puzzle considered hard took unknown minutes on my i7 4770.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
