@@ -1,0 +1,10 @@
+9 9
+xxx6xxxxx
+xx3xxx4xx
+x4xxx2xxx
+3xxx4xxx5
+xxx3xxx4x
+x3xxxx2xx
+xx3xx3xxx
+xxx5xxxxx
+2xxx4xx3x
