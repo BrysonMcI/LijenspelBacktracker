@@ -8,7 +8,11 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <iostream> //Lots of IO
+#include <string>
+#include <algorithm>
 #include <search.h> //Quick sort
+#include <fstream> //File streams
+#include <vector> //Basically a dynamic array
 using namespace std;
 
 //Useful globals
@@ -17,11 +21,11 @@ int numCols;
 
 //Used to keep track of number locations in puzzle to speed up backtracking
 struct number {
-	int value, x, y, remaining;
+	int value, row, col, remaining;
 };
 
 //Global so we don't have to pass it
-number* numbers;
+vector<number> numbers;
 int numNumbers;
 
 //Keeps track of which number we are working on in the numbers array
@@ -32,6 +36,30 @@ const char arrows[4] = {'<', '>', '^', 'v'};
 
 //Keeps track of found solution count
 int numSolutions = 0;
+
+//Prints a single representation of the puzzle
+void printPuzzle(char** puzzle) {
+	//Print top
+	for (int n = 0; n < numCols; n++) {
+		cout << "____";
+	}
+	cout << endl;
+
+	//Print grid
+	for (int n = 0; n < numRows; n++) {
+		cout << "| ";
+		for (int m = 0; m < numCols; m++) {
+			cout << puzzle[n][m] << " | ";
+		}
+		cout << endl;
+	}
+
+	//Print bottom
+	for (int n = 0; n < numCols; n++) {
+		cout << "____";
+	}
+	cout << endl << endl;
+}
 
 //Checks if you have a solution to the puzzle
 // param puzzle: The puzzle state to check for a solution
@@ -61,17 +89,18 @@ bool isSolved(char** puzzle) {
 //  Make sure every empty square can be reached
 bool isValid(char** puzzle) {
 	//First Check Each Number Can Expand
-	int curRemain, x, y;
+	int curRemain, row, col;
 	for (int i = 0; i < numNumbers; i++) {
 		//Gather current info
 		curRemain = numbers[i].remaining;
-		x = numbers[i].x;
-		y = numbers[i].y;
+		row = numbers[i].row;
+		col = numbers[i].col;
 		//Look in each diretion and see if we can get curRemain to 0
-		for (int i = y - 1; i >= 0; i--) {
-			if (puzzle[x][i] != '^') {
+		//Up
+		for (int j = row - 1; j >= 0; j--) {
+			if (puzzle[j][col] != '^') {
 				//Is it empty? Then we could fill it.
-				if (puzzle[x][i] == ' ') {
+				if (puzzle[j][col] == ' ') {
 					curRemain--;
 				}
 				//Otherwise this direction is done
@@ -80,16 +109,72 @@ bool isValid(char** puzzle) {
 				}
 			}
 		}
-		//Check cur remain, do other directions
+		//Down
+		for (int j = row + 1; j < numRows; j++) {
+			if (puzzle[j][col] != 'v') {
+				//Is it empty? Then we could fill it.
+				if (puzzle[j][col] == ' ') {
+					curRemain--;
+				}
+				//Otherwise this direction is done
+				else {
+					break;
+				}
+			}
+		}
+		//Right
+		for (int j = col + 1; j < numCols; j++) {
+			if (puzzle[row][j] != '>') {
+				//Is it empty? Then we could fill it.
+				if (puzzle[row][j] == ' ') {
+					curRemain--;
+				}
+				//Otherwise this direction is done
+				else {
+					break;
+				}
+			}
+		}
+		//Left
+		for (int j = col - 1; j >= 0; j--) {
+			if (puzzle[row][j] != '<') {
+				//Is it empty? Then we could fill it.
+				if (puzzle[row][j] == ' ') {
+					curRemain--;
+				}
+				//Otherwise this direction is done
+				else {
+					break;
+				}
+			}
+		}
+		//Did it have space?
+		if (curRemain > 0) {
+			return false;
+		}
 	}
 
+	//Also check if all the spaces can be reached
 
 	return true;
 }
 
 //The main backtracking function, handles creation of each step of a solution
 // returns: a 3d array holding all possible solutions (hopefully one).
-void backtracker(char*** solutions, char** puzzle) {
+void backtracker(char*** solutions, char** puzzleState) {
+	
+	//Deep copy our current state
+	char** puzzle;
+	puzzle = new char *[numCols];
+
+	//Create and intialize puzzle
+	for (int n = 0; n < numCols; n++) {
+		puzzle[n] = new char[numRows];
+		for (int m = 0; m < numRows; m++) {
+			puzzle[n][m] = puzzleState[n][m];
+		}
+	}
+
 	//Do we have a solution? If so save it
 	if (isSolved(puzzle)) {
 		solutions[numSolutions] = puzzle;
@@ -115,51 +200,71 @@ void backtracker(char*** solutions, char** puzzle) {
 
 		//Recursively call the new arrows we can
 		numbers[currentNumber].remaining--;
-		int x = numbers[currentNumber].x;
-		int y = numbers[currentNumber].y;
+		int row = numbers[currentNumber].row;
+		int col = numbers[currentNumber].col;
 		//Up
-		for (int i = y-1; i >= 0; i--) {
-			if (puzzle[x][i] != '^') {
+		for (int i = row-1; i >= 0; i--) {
+			if (puzzle[i][col] != '^') {
 				//Is it empty? Then we can fill.
-				if (puzzle[x][i] == ' ') {
-					puzzle[x][i] = '^';
+				if (puzzle[i][col] == ' ') {
+					puzzle[i][col] = '^';
 					backtracker(solutions, puzzle);
+					//Reset the space when we don't want it set
+					puzzle[i][col] = ' ';
+					if (numSolutions > 0) {
+						return;
+					}
 				}
 				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
 				break;
 			}
 		}
 		//Right
-		for (int i = x + 1; i < numCols; i++) {
-			if (puzzle[x][i] != '>') {
+		for (int i = col + 1; i < numCols; i++) {
+			if (puzzle[row][i] != '>') {
 				//Is it empty? Then we can fill.
-				if (puzzle[i][y] == ' ') {
-					puzzle[i][y] = '>';
+				if (puzzle[row][i] == ' ') {
+					puzzle[row][i] = '>';
 					backtracker(solutions, puzzle);
+					//Reset this space
+					puzzle[row][i] = ' ';
+					if (numSolutions > 0) {
+						return;
+					}
 				}
 				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
 				break;
 			}
 		}
 		//Down
-		for (int i = y+1; i < numRows; i++) {
-			if (puzzle[x][i] != 'v') {
+		for (int i = row+1; i < numRows; i++) {
+			if (puzzle[i][col] != 'v') {
 				//Is it empty? Then we can fill.
-				if (puzzle[x][i] == ' ') {
-					puzzle[x][i] = 'v';
+				if (puzzle[i][col] == ' ') {
+					puzzle[i][col] = 'v';
 					backtracker(solutions, puzzle);
+					//Reset this space
+					puzzle[i][col] = ' ';
+					if (numSolutions > 0) {
+						return;
+					}
 				}
 				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
 				break;
 			}
 		}
 		//Left
-		for (int i = x - 1; i >= 0; i--) {
-			if (puzzle[x][i] != '<') {
+		for (int i = col - 1; i >= 0; i--) {
+			if (puzzle[row][i] != '<') {
 				//Is it empty? Then we can fill.
-				if (puzzle[i][y] == ' ') {
-					puzzle[i][y] = '<';
+				if (puzzle[row][i] == ' ') {
+					puzzle[row][i] = '<';
 					backtracker(solutions, puzzle);
+					//Reset space
+					puzzle[row][i] = ' ';
+					if (numSolutions > 0) {
+						return;
+					}
 				}
 				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
 				break;
@@ -167,10 +272,10 @@ void backtracker(char*** solutions, char** puzzle) {
 		}
 
 		//If we came back we need to give it its remaining back and go back to our old current number
+		numbers[currentNumber].remaining++;
 		if (incremented) {
 			currentNumber--;
 		}
-		numbers[currentNumber].remaining++;
 		return;
 	}
 }
@@ -184,6 +289,15 @@ int numbersSorter(const void* num1, const void* num2) {
 //Entry point for the backtracker, handles IO, printing, and starting the backtracking
 int main() {
 
+	//Open File For Input
+	//First line must be ROW COL
+	//Following lines will be x's representing spaces and appropriate numbers.
+	ifstream file ("puzzle.txt");
+	string buffer;
+	getline(file, buffer);
+	numRows = buffer[0];
+	numCols = buffer[2];
+
 	//Define Puzzle pointer
 	char** puzzle;
 	puzzle = new char *[numRows];
@@ -191,77 +305,35 @@ int main() {
 	//Create and intialize puzzle
 	for (int n = 0; n < numRows; n++) {
 		puzzle[n] = new char[numCols];
+		getline(file, buffer);
 		for (int m = 0; m < numCols; m++) {
-			puzzle[n][m] = ' ';
+			if (buffer[m] == 'x') {
+				puzzle[n][m] = ' ';
+			}
+			else {
+				puzzle[n][m] = buffer[m];
+				numbers.push_back(number());
+				numbers[numNumbers].row = n;
+				numbers[numNumbers].col = m;
+				numbers[numNumbers].value = buffer[m] - '0';
+				numbers[numNumbers].remaining = numbers[numNumbers].value;
+				numNumbers++;
+			}
 		}
 	}
 
-	//TODO: IO.
-	
-	//Define number of numbers, create list space for the struct
-	numNumbers = 4;
-	numbers = new number[4];
-
-	numRows = 4;
-	numCols = 4;
-
-	//Hard code puzzle
-	puzzle[1][0] = '1';
-	numbers[0].value = 1;
-	numbers[0].x = 1;
-	numbers[0].y = 0;
-	numbers[0].remaining = 1;
-
-	puzzle[0][2] = '3';
-	numbers[1].value = 3;
-	numbers[1].x = 0;
-	numbers[1].y = 2;
-	numbers[0].remaining = 3;
-
-	puzzle[2][3] = '4';
-	numbers[2].value = 4;
-	numbers[2].x = 2;
-	numbers[2].y = 3;
-	numbers[0].remaining = 4;
-
-	puzzle[3][1] = '4';
-	numbers[3].value = 4;
-	numbers[3].x = 3;
-	numbers[3].y = 1;
-	numbers[0].remaining = 4;
-
 	//Sort array of numbers so that we can just do them in order
-	qsort(numbers, numNumbers, sizeof(number), numbersSorter);
+	sort(numbers.begin(), numbers.end(), numbersSorter);
 
 	//Print OG Puzzle
 	cout << "Lijenspel Backtracker" << endl << endl;
 	cout << "Starting State:" << endl;
 
-	//Print top
-	for (int n = 0; n < numCols; n++) {
-		cout << "____";
-	}
-	cout << endl;
-
-	//Print grid
-	for (int n = 0; n < numRows; n++) {
-		cout << "| ";
-		for (int m = 0; m < numCols; m++) {
-			cout << puzzle[n][m] << " | ";
-		}
-		cout << endl;
-	}
-
-	//Print bottom
-	for (int n = 0; n < numCols; n++) {
-		cout << "____";
-	}
-	cout << endl << endl;
+	printPuzzle(puzzle);
 
 	//Call backtracker and let it return a 3d array of puzzle solutions 
-	int numSolutions;
 	char*** solutions = new char**;
-	numSolutions = backtracker(solutions, puzzle);
+	backtracker(solutions, puzzle);
 
 	//No solution :(
 	if (numSolutions == 0) {
@@ -275,30 +347,8 @@ int main() {
 		//Only does first solution
 
 		cout << "Solutions:" << endl;
+		printPuzzle(solutions[numSolutions-1]);
 
-		//Print top
-		for (int n = 0; n < numCols; n++) {
-			cout << "____";
-		}
-		cout << endl;
-
-		//Print grid
-		for (int i = 0; i < numSolutions; i++) {
-			for (int n = 0; n < numRows; n++) {
-				cout << "| ";
-				for (int m = 0; m < numCols; m++) {
-					cout << solutions[i][n][m] << " | ";
-				}
-				cout << endl;
-			}
-		}
-
-		//Print bottom
-		for (int n = 0; n < numCols; n++) {
-			cout << "____";
-		}
-		cout << endl;
-		cout << endl;
 	}
 	
 	//Wait for input to close
