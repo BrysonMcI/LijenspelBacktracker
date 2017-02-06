@@ -27,8 +27,10 @@ int numRows;
 int numCols;
 
 //Used to keep track of number locations in puzzle to speed up backtracking
+//curDir is a way to not redo directions and configurations that had already been completed.
+//	It is used as an index to the char array of arrows
 struct number {
-	int value, row, col, remaining;
+	int value, row, col, remaining, curDir;
 };
 
 //Global so we don't have to pass it
@@ -39,7 +41,7 @@ int numNumbers;
 int currentNumber = 0;
 
 //Nice list of the arrow characters
-const char arrows[4] = {'<', '>', '^', 'v'};
+const char arrows[4] = {'^', '>', 'v', '<'};
 
 //Keeps track of found solution count
 int numSolutions = 0;
@@ -189,6 +191,7 @@ void backtracker(char*** solutions, char** puzzleState) {
 	}
 	//Are we on the right track? If not, bail.
 	else if (!isValid(puzzle)) {
+		printPuzzle(puzzle);
 		for (int n = 0; n < numCols; n++) {
 			delete[]puzzle[n];
 		}
@@ -212,74 +215,96 @@ void backtracker(char*** solutions, char** puzzleState) {
 		numbers[currentNumber].remaining--;
 		int row = numbers[currentNumber].row;
 		int col = numbers[currentNumber].col;
+		int curDir = numbers[currentNumber].curDir;
+		cout << endl << curDir << endl;
 		//Up
-		for (int i = row-1; i >= 0; i--) {
-			if (puzzle[i][col] != '^') {
-				//Is it empty? Then we can fill.
-				if (puzzle[i][col] == ' ') {
-					puzzle[i][col] = '^';
-					backtracker(solutions, puzzle);
-					//Reset the space when we don't want it set
-					puzzle[i][col] = ' ';
-					if (numSolutions > 0) {
-						return;
+	//	if (curDir == 0) {
+			for (int i = row - 1; i >= 0; i--) {
+				if (puzzle[i][col] != '^') {
+					//Is it empty? Then we can fill.
+					if (puzzle[i][col] == ' ') {
+						puzzle[i][col] = '^';
+						backtracker(solutions, puzzle);
+						//Reset the space when we don't want it set
+						puzzle[i][col] = ' ';
+						if (numSolutions > 0) {
+							return;
+						}
 					}
+					//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
+					break;
 				}
-				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
-				break;
 			}
-		}
+			//Done with this direction
+			curDir++;
+			numbers[currentNumber].curDir = curDir;
+	//	}
 		//Right
-		for (int i = col + 1; i < numCols; i++) {
-			if (puzzle[row][i] != '>') {
-				//Is it empty? Then we can fill.
-				if (puzzle[row][i] == ' ') {
-					puzzle[row][i] = '>';
-					backtracker(solutions, puzzle);
-					//Reset this space
-					puzzle[row][i] = ' ';
-					if (numSolutions > 0) {
-						return;
+	//	if (curDir == 1) {
+			for (int i = col + 1; i < numCols; i++) {
+				if (puzzle[row][i] != '>') {
+					//Is it empty? Then we can fill.
+					if (puzzle[row][i] == ' ') {
+						puzzle[row][i] = '>';
+						backtracker(solutions, puzzle);
+						//Reset this space
+						puzzle[row][i] = ' ';
+						if (numSolutions > 0) {
+							return;
+						}
 					}
+					//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
+					break;
 				}
-				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
-				break;
 			}
-		}
+			//Done here too
+			curDir++;
+			numbers[currentNumber].curDir = curDir;
+	//	}
 		//Down
-		for (int i = row+1; i < numRows; i++) {
-			if (puzzle[i][col] != 'v') {
-				//Is it empty? Then we can fill.
-				if (puzzle[i][col] == ' ') {
-					puzzle[i][col] = 'v';
-					backtracker(solutions, puzzle);
-					//Reset this space
-					puzzle[i][col] = ' ';
-					if (numSolutions > 0) {
-						return;
+	//	if (curDir == 2) {
+			for (int i = row + 1; i < numRows; i++) {
+				if (puzzle[i][col] != 'v') {
+					//Is it empty? Then we can fill.
+					if (puzzle[i][col] == ' ') {
+						puzzle[i][col] = 'v';
+						backtracker(solutions, puzzle);
+						//Reset this space
+						puzzle[i][col] = ' ';
+						if (numSolutions > 0) {
+							return;
+						}
 					}
+					//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
+					break;
 				}
-				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
-				break;
 			}
-		}
+			//Done with this direction
+			curDir++;
+			numbers[currentNumber].curDir = curDir;
+	//	}
 		//Left
-		for (int i = col - 1; i >= 0; i--) {
-			if (puzzle[row][i] != '<') {
-				//Is it empty? Then we can fill.
-				if (puzzle[row][i] == ' ') {
-					puzzle[row][i] = '<';
-					backtracker(solutions, puzzle);
-					//Reset space
-					puzzle[row][i] = ' ';
-					if (numSolutions > 0) {
-						return;
+	//	if (curDir == 3) {
+			for (int i = col - 1; i >= 0; i--) {
+				if (puzzle[row][i] != '<') {
+					//Is it empty? Then we can fill.
+					if (puzzle[row][i] == ' ') {
+						puzzle[row][i] = '<';
+						backtracker(solutions, puzzle);
+						//Reset space
+						puzzle[row][i] = ' ';
+						if (numSolutions > 0) {
+							return;
+						}
 					}
+					//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
+					break;
 				}
-				//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
-				break;
 			}
-		}
+			//This SHOULD be unneccesary, but added for consistency
+			curDir++;
+			numbers[currentNumber].curDir = curDir;
+	//	}
 
 		//If we came back we need to give it its remaining back and go back to our old current number
 		numbers[currentNumber].remaining++;
@@ -298,7 +323,7 @@ void backtracker(char*** solutions, char** puzzleState) {
 //Will sort our numbers for us :)
 //params: the two number structs to sort
 int numbersSorter(number num1, number num2) {
-	return (num1.value > num2.value);
+	return (num1.value < num2.value);
 }
 
 //Entry point for the backtracker, handles IO, printing, and starting the backtracking
@@ -332,6 +357,7 @@ int main() {
 				numbers[numNumbers].col = m;
 				numbers[numNumbers].value = buffer[m] - '0';
 				numbers[numNumbers].remaining = numbers[numNumbers].value;
+				numbers[numNumbers].curDir = 0;
 				numNumbers++;
 			}
 		}
