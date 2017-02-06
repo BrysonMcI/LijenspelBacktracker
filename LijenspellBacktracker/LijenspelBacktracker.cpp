@@ -6,8 +6,8 @@
 // Last Update: 2/5/2017
 //
 // Aditional Details:
-//	Only supports basic grid puzzles 9x9 and below
-//  Only support single digit numbers
+//	Only supports basic grid puzzles 9x9 and below.
+//  Only support single digit numbers.
 //  Missing a way to keep track of old previously reached configurations (This is a limitation
 //    currently due to the fact that I go one arrow at a time).
 //  A 9 9 puzzle considered hard took 13 minutes on my i7 4770.
