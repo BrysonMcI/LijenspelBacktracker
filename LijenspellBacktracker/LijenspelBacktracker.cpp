@@ -36,6 +36,7 @@ struct number {
 //Global so we don't have to pass it
 vector<number> numbers;
 int numNumbers;
+int* totalSpaceUsed;
 
 //Keeps track of which number we are working on in the numbers array
 int currentNumber = 0;
@@ -48,6 +49,28 @@ int numSolutions = 0;
 
 //Prints a single representation of the puzzle
 void printPuzzle(char** puzzle) {
+	//Print top
+	for (int n = 0; n < numCols; n++) {
+		cout << "____";
+	}
+	cout << endl;
+
+	//Print grid
+	for (int n = 0; n < numRows; n++) {
+		cout << "| ";
+		for (int m = 0; m < numCols; m++) {
+			cout << puzzle[n][m] << " | ";
+		}
+		cout << endl;
+		for (int n = 0; n < numCols; n++) {
+			cout << "|___";
+		}
+		cout << "|" << endl;
+	}
+	cout << endl;
+}
+
+void printSquares(int** puzzle) {
 	//Print top
 	for (int n = 0; n < numCols; n++) {
 		cout << "____";
@@ -167,6 +190,284 @@ bool isValid(char** puzzle) {
 	return true;
 }
 
+//Checks if any square cannot be filled and is therefore invalid, or if there is only one option for a square and it can be filled
+bool remaingSquares(char** puzzle) {
+	//Need a duplicate sized grid of ints
+	int** squares;
+	squares = new int *[numCols];
+	int* spaceUsed = new int[numNumbers];
+
+	for (int i = 0; i < numNumbers; i++) {
+		spaceUsed[i] = 0;
+	}
+
+	//Create and intialize our new grid
+	for (int n = 0; n < numCols; n++) {
+		squares[n] = new int[numRows];
+		for (int m = 0; m < numRows; m++) {
+			if (puzzle[n][m] == '^') {
+				squares[n][m] = 0;
+			}
+			else if (puzzle[n][m] == '>') {
+				squares[n][m] = 1;
+			}
+			else if (puzzle[n][m] == 'v') {
+				squares[n][m] = 2;
+			}
+			else if (puzzle[n][m] == '<') {
+				squares[n][m] = 3;
+			}
+			else {
+				squares[n][m] = -1;
+			}
+		}
+	}
+
+	//Now loop through all the numbers, if a square can be touched it gets the corresponding index of the arrow
+	// it would have in the arrows array.
+	// If it stays at -1, we know we have an invalid 
+	// 4 Means a number is there
+	// If it is a 5, then it has multiple options and will be ignored
+	// In the end numbers will be filled in with their arrows on the puzzle board
+	for (int k = 0; k < numNumbers; k++) {
+		int curRow = numbers[k].row;
+		int curCol = numbers[k].col;
+		squares[curRow][curCol] = 4;
+		//Loop in all directions setting numbers;
+		//Up
+		int remaining = numbers[k].remaining;
+		for (int i = curRow - 1; i >= 0; i--) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (puzzle[i][curCol] != ' ' && puzzle[i][curCol] != '^') {
+				//Not empty, not right direction, dead end
+				break;
+			}
+			else if (puzzle[i][curCol] == ' ') {
+				if (squares[i][curCol] == -1) {
+					//We can set this square
+					squares[i][curCol] = 0;
+				}
+				else {
+					//Someone else has already been here
+					squares[i][curCol] = 5;
+				}
+			}
+		}
+		//Right
+		remaining = numbers[k].remaining;
+		for (int i = curCol + 1; i < numCols; i++) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (puzzle[curRow][i] != ' ' && puzzle[curRow][i] != '>') {
+				//Not empty, not right direction, dead end
+				break;
+			}
+			else if (puzzle[curRow][i] == ' ') {
+				if (squares[curRow][i] == -1) {
+					//We can set this square
+					squares[curRow][i] = 1;
+				}
+				else {
+					//Someone else has already been here
+					squares[curRow][i] = 5;
+					//We don't stop because a farther square could matter more.
+				}
+			}
+		}
+		//Down
+		remaining = numbers[k].remaining;
+		for (int i = curRow + 1; i < numRows; i++) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (puzzle[i][curCol] != ' ' && puzzle[i][curCol] != 'v') {
+				//Not empty, not right direction, dead end
+				break;
+			}
+			else if (puzzle[i][curCol] == ' ') {
+				if (squares[i][curCol] == -1) {
+					//We can set this square
+					squares[i][curCol] = 2;
+				}
+				else {
+					//Someone else has already been here
+					squares[i][curCol] = 5;
+				}
+			}
+		}
+		//Left
+		remaining = numbers[k].remaining;
+		for (int i = curCol - 1; i >= 0; i--) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (puzzle[curRow][i] != ' ' && puzzle[curRow][i] != '<') {
+				//Not empty, not right direction, dead end
+				break;
+			}
+			else if (puzzle[curRow][i] == ' ') {
+				if (squares[curRow][i] == -1) {
+					//We can set this square
+					squares[curRow][i] = 3;
+				}
+				else {
+					//Someone else has already been here
+					squares[curRow][i] = 5;
+					//We don't stop because a farther square could matter more.
+				}
+			}
+		}
+	}
+	//now we go number by number and see if it has a square it sohuld extend to and make sure it has the remaining to do so
+	for (int k = 0; k < numNumbers; k++) {
+		int curRow = numbers[k].row;
+		int curCol = numbers[k].col;
+		//Loop in all directions setting numbers;
+		//Up
+		int remaining = numbers[k].remaining;
+		for (int i = curRow - 1; i >= 0; i--) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (squares[i][curCol] == 0) {
+				//Loop back and drop arrows
+				for (int j = i; j <= curRow - 1; j++) {
+					if (puzzle[j][curCol] == '^') {
+						break;
+					}
+					else if (puzzle[j][curCol] != ' ') {
+						for (int i = 0; i < numNumbers; i++) {
+							totalSpaceUsed[i] += spaceUsed[i];
+						}
+						return false;
+					}
+					puzzle[j][curCol] = '^';
+					spaceUsed[k]++;
+				}
+			}
+		}
+		//Right
+		remaining = numbers[k].remaining;
+		for (int i = curCol + 1; i < numCols; i++) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (squares[curRow][i] == 1) {
+				//Loop back and drop arrows
+				for (int j = i; j >= curCol + 1; j--) {
+					if (puzzle[curRow][j] != '>') {
+						break;
+					}
+					else if (puzzle[curRow][j] != ' ') {
+						for (int i = 0; i < numNumbers; i++) {
+							totalSpaceUsed[i] += spaceUsed[i];
+						}
+						return false;
+					}
+					puzzle[curRow][j] = '>';
+					spaceUsed[k]++;
+				}
+			}
+		}
+		//Down
+		remaining = numbers[k].remaining;
+		for (int i = curRow + 1; i < numRows; i++) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (squares[i][curCol] == 2) {
+				//Loop back and drop arrows
+				for (int j = i; j >= curRow + 1; j--) {
+					if (puzzle[j][curCol] == 'v') {
+						break;
+					}
+					if (puzzle[j][curCol] != ' ') {
+						for (int i = 0; i < numNumbers; i++) {
+							totalSpaceUsed[i] += spaceUsed[i];
+						}
+						return false;
+					}
+					puzzle[j][curCol] = 'v';
+					spaceUsed[k]++;
+				}
+			}
+		}
+		//Left
+		remaining = numbers[k].remaining;
+		for (int i = curCol - 1; i >= 0; i--) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (squares[curRow][i] == 3) {
+				//Loop back and drop arrows
+				for (int j = i; j <= curCol - 1; j++) {
+					if (puzzle[curRow][j] == '<') {
+						break;
+					}
+					else if (puzzle[curRow][j] != ' ') {
+						for (int i = 0; i < numNumbers; i++) {
+							totalSpaceUsed[i] += spaceUsed[i];
+						}
+						return false;
+					}
+					puzzle[curRow][j] = '<';
+					spaceUsed[k]++;
+				}
+			}
+		}
+
+		numbers[k].remaining -= spaceUsed[k];
+		if (numbers[k].remaining < 0) {
+			//Multiple spaces were only accessable by this number, and couldn't all be serviced by it.
+			for (int i = 0; i < numNumbers; i++) {
+				totalSpaceUsed[i] += spaceUsed[i];
+			}
+			return false;
+		}
+	}
+	
+	for (int n = 0; n < numCols; n++) {
+		delete[]squares[n];
+	}
+	delete[]squares;
+	
+	//Continue this process until we can't eliminate any more.
+	for (int k = 0; k < numNumbers; k++) {
+		if (spaceUsed[k] != 0) {
+			bool valid = remaingSquares(puzzle);
+			if (valid) {
+				return true;
+			}
+			else {
+				for (int i = 0; i < numNumbers; i++) {
+					totalSpaceUsed[i] += spaceUsed[i];
+				}
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 //The main backtracking function, handles creation of each step of a solution
 // returns: a 3d array holding all possible solutions (hopefully one).
 void backtracker(char*** solutions, char** puzzleState) {
@@ -182,28 +483,69 @@ void backtracker(char*** solutions, char** puzzleState) {
 			puzzle[n][m] = puzzleState[n][m];
 		}
 	}
-
-	//Do we have a solution? If so save it
-	if (isSolved(puzzle)) {
-		solutions[numSolutions] = puzzle;
-		numSolutions++;
-		return;
-	}
-	//Are we on the right track? If not, bail.
-	else if (!isValid(puzzle)) {
+	
+	//Not valid, don't continue
+	if (!isValid(puzzle)) {
 		for (int n = 0; n < numCols; n++) {
 			delete[]puzzle[n];
 		}
 		delete[]puzzle;
+		
+		for (int i = 0; i < numNumbers; i++) {
+			numbers[i].remaining += totalSpaceUsed[i];
+		}
+
+		return;
+	}
+	//Fill squares that only have one option and check if invalid due to squares not having any options
+	for (int i = 0; i < numNumbers; i++) {
+		totalSpaceUsed[i] = 0;
+	}
+	if (!remaingSquares(puzzle)) {
+		//Essentially not valid
+		for (int n = 0; n < numCols; n++) {
+			delete[]puzzle[n];
+		}
+		delete[]puzzle;
+
+		for (int i = 0; i < numNumbers; i++) {
+			numbers[i].remaining += totalSpaceUsed[i];
+		}
+
+		return;
+	}
+	//Check again after remaining squares goes off
+	if (!isValid(puzzle)) {
+		for (int n = 0; n < numCols; n++) {
+			delete[]puzzle[n];
+		}
+		delete[]puzzle;
+
+		for (int i = 0; i < numNumbers; i++) {
+			numbers[i].remaining += totalSpaceUsed[i];
+		}
+
+		return;
+	}
+	//Do we have a solution? If so save it
+	if (isSolved(puzzle)) {
+		solutions[numSolutions] = puzzle;
+		numSolutions++;
+		
+		for (int i = 0; i < numNumbers; i++) {
+			numbers[i].remaining += totalSpaceUsed[i];
+		}
+
 		return;
 	}
 	//Keep going, generate next states
 	else {
 		//Are we done with the current number?
-		bool incremented = false;
-		if (numbers[currentNumber].remaining == 0) {
+		int incremented = 0;
+		printPuzzle(puzzle);
+		while (numbers[currentNumber].remaining == 0) {
 			currentNumber++;
-			incremented = true;
+			incremented++;
 			if (currentNumber == numNumbers) {
 				//I don't think we will ever get here
 				currentNumber = 0;
@@ -225,13 +567,10 @@ void backtracker(char*** solutions, char** puzzleState) {
 						backtracker(solutions, puzzle);
 						//Reset the space when we don't want it set
 						puzzle[i][col] = ' ';
-						if (numSolutions > 0) {
-							return;
-						}
 					}
 					else {
 						//Done with this direction
-						curDir++;
+						curDir = 1;
 						numbers[currentNumber].curDir = curDir;
 					}
 					//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
@@ -249,13 +588,10 @@ void backtracker(char*** solutions, char** puzzleState) {
 						backtracker(solutions, puzzle);
 						//Reset this space
 						puzzle[row][i] = ' ';
-						if (numSolutions > 0) {
-							return;
-						}
 					}
 					else {
 						//Done with this direction
-						curDir++;
+						curDir = 2;
 						numbers[currentNumber].curDir = curDir;
 					}
 					//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
@@ -273,13 +609,10 @@ void backtracker(char*** solutions, char** puzzleState) {
 						backtracker(solutions, puzzle);
 						//Reset this space
 						puzzle[i][col] = ' ';
-						if (numSolutions > 0) {
-							return;
-						}
 					}
 					else {
 						//Done with this direction
-						curDir++;
+						curDir = 3;
 						numbers[currentNumber].curDir = curDir;
 					}
 					//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
@@ -297,13 +630,10 @@ void backtracker(char*** solutions, char** puzzleState) {
 						backtracker(solutions, puzzle);
 						//Reset space
 						puzzle[row][i] = ' ';
-						if (numSolutions > 0) {
-							return;
-						}
 					}
 					else {
-						//Done with this direction
-						curDir++;
+						//Done with this direction ( shouldn't matter).
+						curDir = 0;
 						numbers[currentNumber].curDir = curDir;
 					}
 					//Otherwise its a number or a bad arrow and we can't (we also want to break after recursion.
@@ -314,15 +644,21 @@ void backtracker(char*** solutions, char** puzzleState) {
 
 		//If we came back we need to give it its remaining back and go back to our old current number
 		numbers[currentNumber].remaining++;
-		numbers[currentNumber].curDir = 0;
-		if (incremented) {
+		while (incremented > 0) {
+			numbers[currentNumber].curDir = 0;
 			currentNumber--;
+			incremented--;
 		}
 		//And clean up memory
 		for (int n = 0; n < numCols; n++) {
 			delete[]puzzle[n];
 		}
 		delete[]puzzle;
+		
+		for (int i = 0; i < numNumbers; i++) {
+			numbers[i].remaining += totalSpaceUsed[i];
+		}
+
 		return;
 	}
 }
@@ -384,6 +720,7 @@ int main() {
 
 	//Call backtracker and let it return a 3d array of puzzle solutions 
 	char*** solutions = new char**;
+	totalSpaceUsed = new int[numNumbers];
 	backtracker(solutions, puzzle);
 
 	//No solution :(
@@ -397,9 +734,11 @@ int main() {
 		//Display Solutions Returned to console
 		//Only does first solution
 
-		cout << "Solution:" << endl;
-		printPuzzle(solutions[numSolutions-1]);
-
+		cout << "There is/are " << numSolutions << " solution(s):" << endl;
+		while (numSolutions > 0) {
+			numSolutions--;
+			printPuzzle(solutions[numSolutions]);
+		}
 	}
 	
 	//Wait for input to close
