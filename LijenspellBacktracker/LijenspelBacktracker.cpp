@@ -329,6 +329,8 @@ bool remaingSquares(char** puzzle) {
 			}
 		}
 	}
+	printSquares(squares);
+	printPuzzle(puzzle);
 	//now we go number by number and see if it has a square it sohuld extend to and make sure it has the remaining to do so
 	for (int k = 0; k < numNumbers; k++) {
 		int curRow = numbers[k].row;
@@ -444,7 +446,8 @@ bool remaingSquares(char** puzzle) {
 			return false;
 		}
 	}
-	
+	printPuzzle(puzzle);
+
 	for (int n = 0; n < numCols; n++) {
 		delete[]squares[n];
 	}
