@@ -1,0 +1,8 @@
+7 7
+xxx3xxx
+x4xx2xx
+xx1xx2x
+4xx2xx3
+x2xx4xx
+xx3xx1x
+xxx5xxx

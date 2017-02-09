@@ -1,8 +1,10 @@
-7 7
-xxx3xxx
-x4xx2xx
-xx1xx2x
-4xx2xx3
-x2xx4xx
-xx3xx1x
-xxx5xxx
+9 9
+xxx6xxxxx
+xx3xxx4xx
+x4xxx2xxx
+3xxx4xxx5
+xxx3xxx4x
+x3xxxx2xx
+xx3xx3xxx
+xxx5xxxxx
+2xxx4xx3x
