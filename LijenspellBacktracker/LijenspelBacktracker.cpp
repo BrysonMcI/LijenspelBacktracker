@@ -206,6 +206,7 @@ void backtracker(char*** solutions, char** puzzleState) {
 		}
 	}
 	
+	printPuzzle(puzzle);
 	//Not valid, don't continue
 	if (!isValid(puzzle)) {
 		for (int n = 0; n < numCols; n++) {
@@ -493,7 +494,7 @@ void backtracker(char*** solutions, char** puzzleState) {
 			}
 
 			numbers[k].remaining -= spaceUsed[k];
-			
+
 			//Someone used too many spaces :(
 			if (numbers[k].remaining < 0) {
 				//Multiple spaces were only accessable by this number, and couldn't all be serviced by it.
@@ -509,7 +510,7 @@ void backtracker(char*** solutions, char** puzzleState) {
 			delete[]squares[n];
 		}
 		delete[]squares;
-
+		
 		//Essentially skip the entire bottom half of this code and continue on with least values remaining.
 		for (int k = 0; k < numNumbers; k++) {
 			if (spaceUsed[k] != 0) {
@@ -517,6 +518,8 @@ void backtracker(char*** solutions, char** puzzleState) {
 				return;
 			}
 		}
+
+		delete[]spaceUsed;
 
 		//THIS IS THE END OF LEAST VALUES REMAINING NOW WE JUST TRY FROM LOWEST NUMBER GOING FOR LOWEST NUMBER OF BRANCHES
 		//Why do we not try based off which squares have the least amount of options you say?
@@ -627,7 +630,6 @@ void backtracker(char*** solutions, char** puzzleState) {
 
 		//If we came back we need to give it its remaining back and go back to our old current number
 		numbers[currentNumber].remaining++;
-		printPuzzle(puzzle);
 		while (incremented > 0) {
 			numbers[currentNumber].curDir = 0;
 			currentNumber--;
