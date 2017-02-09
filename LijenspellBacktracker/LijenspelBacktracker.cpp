@@ -43,8 +43,32 @@ int currentNumber = 0;
 //Nice list of the arrow characters
 const char arrows[4] = {'^', '>', 'v', '<'};
 
-//Keeps track of found solution count
-int numSolutions = 0;
+//Checks if two puzzle boards are equivilant
+bool checkEquals(char** puzzleOne, char** puzzleTwo) {
+	//Loop through puzzles and compare characters
+	for (int k = 0; k < numRows; k++) {
+		for (int l = 0; l < numCols; l++) {
+			if (puzzleOne[k][l] != puzzleTwo[k][l]) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+//Will clean up our solutions vector
+void deleteDuplicates(vector<char**> &solutions) {
+	
+	//Loop through vectors, checking each vector past it against it. Delete duplicates.
+	for (int i = 0; i < solutions.size(); i++) {
+		for (int j = i + 1; j < solutions.size(); j++) {	
+			if (checkEquals(solutions[i], solutions[j])) {
+				//Erase duplicate
+				solutions.erase(solutions.begin() + j);
+			}
+		}
+	}
+}
 
 //Will sort our numbers for us :)
 //params: the two number structs to sort
@@ -257,7 +281,7 @@ void updateRemaining(char** puzzle) {
 
 //The main backtracking function, handles creation of each step of a solution
 // returns: a 3d array holding all possible solutions (hopefully one).
-void backtracker(char*** solutions, char** puzzleState) {
+void backtracker(vector<char**> &solutions, char** puzzleState) {
 	
 	//Deep copy our current state
 	char** puzzle;
@@ -285,8 +309,7 @@ void backtracker(char*** solutions, char** puzzleState) {
 	//Fill squares that only have one option and check if invalid due to squares not having any options
 	//Do we have a solution? If so save it
 	if (isSolved(puzzle)) {
-		solutions[numSolutions] = puzzle;
-		numSolutions++;
+		solutions.push_back(puzzle);
 		return;
 	}
 	//Keep going, generate next states
@@ -759,11 +782,13 @@ int main() {
 	printPuzzle(puzzle);
 
 	//Call backtracker and let it return a 3d array of puzzle solutions
-	char*** solutions = new char**;
+	vector<char**> solutions;
 	backtracker(solutions, puzzle);
 
+	delete[]puzzle;
+
 	//No solution :(
-	if (numSolutions == 0) {
+	if (solutions.empty()) {
 		cout << "No Solutions for Provided State" << endl << endl;
 	}
 	
@@ -771,14 +796,13 @@ int main() {
 	else {
 
 		//Check for duplicate solutions
-
+		deleteDuplicates(solutions);
 
 		//Display Solutions Returned to console
-
-		cout << "There is/are " << numSolutions << " solution(s):" << endl;
-		while (numSolutions > 0) {
-			numSolutions--;
-			printPuzzle(solutions[numSolutions]);
+		cout << "There is/are " << solutions.size() << " solution(s):" << endl;
+		while (!solutions.empty()) {
+			printPuzzle(solutions[solutions.size() - 1 ]);
+			solutions.pop_back();
 		}
 	}
 	
