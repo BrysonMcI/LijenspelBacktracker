@@ -180,6 +180,7 @@ bool isValid(char** puzzle) {
 		}
 		//Did it have space?
 		if (curRemain > 0) {
+
 			return false;
 		}
 	}
@@ -205,8 +206,6 @@ void backtracker(char*** solutions, char** puzzleState) {
 		}
 	}
 	
-	printPuzzle(puzzle);
-
 	//Not valid, don't continue
 	if (!isValid(puzzle)) {
 		for (int n = 0; n < numCols; n++) {
@@ -288,6 +287,10 @@ void backtracker(char*** solutions, char** puzzleState) {
 						squares[i][curCol] = 5;
 					}
 				}
+				else {
+					//This square was already taken by a good arrow and doesn't cost us.
+					remaining++;
+				}
 			}
 			//Right
 			remaining = numbers[k].remaining;
@@ -312,6 +315,10 @@ void backtracker(char*** solutions, char** puzzleState) {
 						//We don't stop because a farther square could matter more.
 					}
 				}
+				else {
+					//This square was already taken by a good arrow and doesn't cost us.
+					remaining++;
+				}
 			}
 			//Down
 			remaining = numbers[k].remaining;
@@ -334,6 +341,10 @@ void backtracker(char*** solutions, char** puzzleState) {
 						//Someone else has already been here
 						squares[i][curCol] = 5;
 					}
+				}
+				else {
+					//This square was already taken by a good arrow and doesn't cost us.
+					remaining++;
 				}
 			}
 			//Left
@@ -359,6 +370,19 @@ void backtracker(char*** solutions, char** puzzleState) {
 						//We don't stop because a farther square could matter more.
 					}
 				}
+				else {
+					//This square was already taken by a good arrow and doesn't cost us.
+					remaining++;
+				}
+			}
+		}
+
+		//Check to see if a space can't be reached (Essentially another is valid check with a new criteria)
+		for (int m = 0; m < numRows; m++) {
+			for (int n = 0; n < numCols; n++) {
+				if (squares[m][n] == -1) {
+					return;
+				}
 			}
 		}
 
@@ -377,7 +401,7 @@ void backtracker(char*** solutions, char** puzzleState) {
 				}
 				if (squares[i][curCol] == 0) {
 					//Loop back and drop arrows
-					for (int j = i; j <= curRow - 1; j++) {
+					for (int j = i; j <= curRow - 1; j++) {				
 						if (puzzle[j][curCol] == '^') {
 							break;
 						}
@@ -387,8 +411,8 @@ void backtracker(char*** solutions, char** puzzleState) {
 							}
 							return;
 						}
-						puzzle[j][curCol] = '^';
 						spaceUsed[k]++;
+						puzzle[j][curCol] = '^';
 					}
 				}
 			}
@@ -502,7 +526,6 @@ void backtracker(char*** solutions, char** puzzleState) {
 
 		//Are we done with the current number?
 		int incremented = 0;
-		printPuzzle(puzzle);
 		while (numbers[currentNumber].remaining == 0) {
 			currentNumber++;
 			incremented++;
@@ -604,6 +627,7 @@ void backtracker(char*** solutions, char** puzzleState) {
 
 		//If we came back we need to give it its remaining back and go back to our old current number
 		numbers[currentNumber].remaining++;
+		printPuzzle(puzzle);
 		while (incremented > 0) {
 			numbers[currentNumber].curDir = 0;
 			currentNumber--;
