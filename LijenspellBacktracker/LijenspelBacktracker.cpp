@@ -3,13 +3,10 @@
 // Rules and puzzles can be found at http://puzzlepicnic.com/genre?id=51.
 // Author: Bryson McIver
 // Created: 2/3/2017
-// Last Update: 2/5/2017
+// Last Update: 2/9/2017
 //
 // Aditional Details:
-//	Only supports basic grid puzzles 9x9 and below.
-//  Only support single digit numbers.
-//  Missing a way to keep track of old previously reached configurations (This is a limitation
-//    currently due to the fact that I go one arrow at a time).
+//  Only supports single digit numbers in the grid.
 //  A 9 9 puzzle considered hard took about 5 seconds on my i7 4770. Woo!
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -17,6 +14,7 @@
 #include <iostream> //Lots of IO
 #include <string>
 #include <algorithm>
+#include <cmath>
 #include <search.h> //Quick sort
 #include <fstream> //File streams
 #include <vector> //Basically a dynamic array
@@ -741,8 +739,22 @@ int main() {
 	ifstream file ("puzzle.txt");
 	string buffer;
 	getline(file, buffer);
-	numRows = buffer[0] - '0';
-	numCols = buffer[2] - '0';
+	//Read the top line for the size of puzzle
+	int i = 0;
+	string num = "";
+	while (isdigit(buffer[i])) {
+		num += buffer[i];
+		i++;
+	}
+	numRows = stoi(num);
+
+	i++;
+	num = "";
+	while (isdigit(buffer[i])) {
+		num += buffer[i];
+		i++;
+	}
+	numCols = stoi(num);
 
 	//Define Puzzle pointer
 	char** puzzle;
