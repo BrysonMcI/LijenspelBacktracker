@@ -46,6 +46,12 @@ const char arrows[4] = {'^', '>', 'v', '<'};
 //Keeps track of found solution count
 int numSolutions = 0;
 
+//Will sort our numbers for us :)
+//params: the two number structs to sort
+int numbersSorter(number num1, number num2) {
+	return (num1.value < num2.value);
+}
+
 //Prints a single representation of the puzzle
 void printPuzzle(char** puzzle) {
 	//Print top
@@ -69,6 +75,7 @@ void printPuzzle(char** puzzle) {
 	cout << endl;
 }
 
+//Prints the squares array used in backtracking
 void printSquares(int** puzzle) {
 	//Print top
 	for (int n = 0; n < numCols; n++) {
@@ -190,6 +197,63 @@ bool isValid(char** puzzle) {
 	return true;
 }
 
+void updateRemaining(char** puzzle) {
+	//Loops through numbers and changes their remaining based on the arrows they are connnect to
+	int row, col, val, found;
+	
+	for (int i = 0; i < numNumbers; i++) {
+		//Loop all 4 directions counting remaining
+		row = numbers[i].row;
+		col = numbers[i].col;
+		val = numbers[i].value;
+		found = 0;
+		//Look in each diretion and see if we can get curRemain to 0
+		//Up
+		for (int j = row - 1; j >= 0; j--) {
+			if (puzzle[j][col] != '^') {
+					break;
+			}
+			else {
+				found++;
+			}
+		}
+		//Down
+		for (int j = row + 1; j < numRows; j++) {
+			if (puzzle[j][col] != 'v') {
+				break;
+			}
+			else {
+				found++;
+			}
+		}
+		//Right
+		for (int j = col + 1; j < numCols; j++) {
+			if (puzzle[row][j] != '>') {
+				break;
+			}
+			else {
+				found++;
+			}
+		}
+		//Left
+		for (int j = col - 1; j >= 0; j--) {
+			if (puzzle[row][j] != '<') {
+				break;
+			}
+			else {
+				found++;
+			}
+		}
+		
+		//Update remaining
+		numbers[i].remaining = val - found;
+
+	}
+
+	//Re-sort based on remaining
+	sort(numbers.begin(), numbers.end(), numbersSorter);
+
+}
 
 //The main backtracking function, handles creation of each step of a solution
 // returns: a 3d array holding all possible solutions (hopefully one).
@@ -207,7 +271,9 @@ void backtracker(char*** solutions, char** puzzleState) {
 		}
 	}
 	
-	printPuzzle(puzzle);
+	//Update remaining values of puzzle.
+	updateRemaining(puzzle);
+
 	//Not valid, don't continue
 	if (!isValid(puzzle)) {
 		for (int n = 0; n < numCols; n++) {
@@ -540,7 +606,6 @@ void backtracker(char*** solutions, char** puzzleState) {
 		}
 
 		//Recursively call the new arrows we can
-		numbers[currentNumber].remaining--;
 		int row = numbers[currentNumber].row;
 		int col = numbers[currentNumber].col;
 		int curDir = numbers[currentNumber].curDir;
@@ -629,8 +694,6 @@ void backtracker(char*** solutions, char** puzzleState) {
 			}
 		}
 
-		//If we came back we need to give it its remaining back and go back to our old current number
-		numbers[currentNumber].remaining++;
 		while (incremented > 0) {
 			numbers[currentNumber].curDir = 0;
 			currentNumber--;
@@ -644,12 +707,6 @@ void backtracker(char*** solutions, char** puzzleState) {
 
 		return;
 	}
-}
-
-//Will sort our numbers for us :)
-//params: the two number structs to sort
-int numbersSorter(number num1, number num2) {
-	return (num1.value < num2.value);
 }
 
 //Entry point for the backtracker, handles IO, printing, and starting the backtracking
@@ -701,7 +758,7 @@ int main() {
 
 	printPuzzle(puzzle);
 
-	//Call backtracker and let it return a 3d array of puzzle solutions 
+	//Call backtracker and let it return a 3d array of puzzle solutions
 	char*** solutions = new char**;
 	backtracker(solutions, puzzle);
 
@@ -713,8 +770,10 @@ int main() {
 	//Print Solutions
 	else {
 
+		//Check for duplicate solutions
+
+
 		//Display Solutions Returned to console
-		//Only does first solution
 
 		cout << "There is/are " << numSolutions << " solution(s):" << endl;
 		while (numSolutions > 0) {
