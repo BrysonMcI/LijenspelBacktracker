@@ -1,0 +1,11 @@
+10 10
+3xxxxx7xxx
+x3xx2xx1xx
+xxxx3xxx3x
+xxx3xxxxx5
+x11xx5xxxx
+xxxx2xx34x
+4xxxxx3xxx
+x2xxx3xxxx
+xx4xx2xx2x
+xxx6xxxxx4
