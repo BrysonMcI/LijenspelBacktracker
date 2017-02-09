@@ -190,6 +190,7 @@ bool isValid(char** puzzle) {
 	return true;
 }
 
+
 //The main backtracking function, handles creation of each step of a solution
 // returns: a 3d array holding all possible solutions (hopefully one).
 void backtracker(char*** solutions, char** puzzleState) {
