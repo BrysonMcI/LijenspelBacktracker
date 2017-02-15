@@ -291,8 +291,6 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 			puzzle[n][m] = puzzleState[n][m];
 		}
 	}
-	
-	printPuzzle(puzzle);
 
 	//Update remaining values of puzzle.
 	updateRemaining(puzzle);
