@@ -3,19 +3,18 @@
 // Rules and puzzles can be found at http://puzzlepicnic.com/genre?id=51.
 // Author: Bryson McIver
 // Created: 2/3/2017
-// Last Update: 2/9/2017
+// Last Update: 2/15/2017
 //
 // Aditional Details:
 //  Only supports single digit numbers in the grid.
 //  A 9 9 puzzle considered hard took about 5 seconds on my i7 4770. Woo!
+//  Supports solving from partial solutions/checking if you can still solve based on current state
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <iostream> //Lots of IO
 #include <string>
 #include <algorithm>
-#include <cmath>
-#include <search.h> //Quick sort
 #include <fstream> //File streams
 #include <vector> //Basically a dynamic array
 using namespace std;
@@ -278,7 +277,7 @@ void updateRemaining(char** puzzle) {
 }
 
 //The main backtracking function, handles creation of each step of a solution
-// returns: a 3d array holding all possible solutions (hopefully one).
+// returns: a 3d vector holding all possible solutions (hopefully one).
 void backtracker(vector<char**> &solutions, char** puzzleState) {
 	
 	//Deep copy our current state
@@ -293,6 +292,8 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 		}
 	}
 	
+	printPuzzle(puzzle);
+
 	//Update remaining values of puzzle.
 	updateRemaining(puzzle);
 
@@ -767,6 +768,9 @@ int main() {
 		for (int m = 0; m < numCols; m++) {
 			if (buffer[m] == 'x') {
 				puzzle[n][m] = ' ';
+			}
+			else if (buffer[m] == 'v' || buffer[m] == '^' || buffer[m] == '<' || buffer[m] == '>') {
+				puzzle[n][m] = buffer[m];
 			}
 			else {
 				puzzle[n][m] = buffer[m];
