@@ -3,13 +3,14 @@
 // Rules and puzzles can be found at http://puzzlepicnic.com/genre?id=51.
 // Author: Bryson McIver
 // Created: 2/3/2017
-// Last Update: 2/9/2017
+// Last Update: 2/23/2017
 //
 // Aditional Details:
 //  Only supports single digit numbers in the grid.
 //  A 9 9 puzzle considered hard took about 5 seconds on my i7 4770. Woo!
+//  Little home made rating system, step by step, and until next guess modes made for creating puzzles
 //
-///////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <iostream> //Lots of IO
 #include <string>
@@ -18,6 +19,8 @@
 #include <search.h> //Quick sort
 #include <fstream> //File streams
 #include <vector> //Basically a dynamic array
+#include <iomanip> //setprecision
+#include <math.h>
 using namespace std;
 
 //Useful globals
@@ -34,6 +37,12 @@ struct number {
 //Global so we don't have to pass it
 vector<number> numbers;
 int numNumbers;
+
+//Keeps track of what operating mode we want
+int mode;
+
+//Difficulty is rated based on size, number of numbers, and number of guesses.
+double difficultyRate;
 
 //Keeps track of which number we are working on in the numbers array
 int currentNumber = 0;
@@ -281,6 +290,12 @@ void updateRemaining(char** puzzle) {
 // returns: a 3d array holding all possible solutions (hopefully one).
 void backtracker(vector<char**> &solutions, char** puzzleState) {
 	
+	if (mode == 3) {
+		cout << "Current State" << endl;
+		printPuzzle(puzzleState);
+		system("pause");
+	}
+
 	//Deep copy our current state
 	char** puzzle;
 	puzzle = new char *[numCols];
@@ -307,6 +322,7 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 	//Fill squares that only have one option and check if invalid due to squares not having any options
 	//Do we have a solution? If so save it
 	if (isSolved(puzzle)) {
+		mode = 1;
 		solutions.push_back(puzzle);
 		return;
 	}
@@ -609,6 +625,15 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 
 		delete[]spaceUsed;
 
+		//Essentially max we could solve, return it as a solution to cheat and make this easy on myself
+		if (mode == 2) {
+			solutions.push_back(puzzle);
+			return;
+		}
+
+		//We have to guess, increase difficulty
+		difficultyRate++;
+
 		//THIS IS THE END OF LEAST VALUES REMAINING NOW WE JUST TRY FROM LOWEST NUMBER GOING FOR LOWEST NUMBER OF BRANCHES
 		//Why do we not try based off which squares have the least amount of options you say?
 		//Because in practice (and solving them by hand) I found that the combination of these two methods was very effective
@@ -726,6 +751,8 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 		}
 		delete[]puzzle;
 
+
+
 		return;
 	}
 }
@@ -736,7 +763,7 @@ int main() {
 	//Open File For Input
 	//First line must be ROW COL
 	//Following lines will be x's representing spaces and appropriate numbers.
-	ifstream file ("puzzle.txt");
+	ifstream file ("puzzleEasy.txt");
 	string buffer;
 	getline(file, buffer);
 	//Read the top line for the size of puzzle
@@ -793,6 +820,17 @@ int main() {
 
 	printPuzzle(puzzle);
 
+	cout << "Select Option:" << endl;
+	cout << "1 - Solve" << endl;
+	cout << "2 - Solve until guess" << endl;
+	cout << "3 - One Step At a Time" << endl;
+	cout << "Number: ";
+
+	cin >> mode;
+
+	cout << endl;
+
+	difficultyRate = 0;
 	//Call backtracker and let it return a 3d array of puzzle solutions
 	vector<char**> solutions;
 	backtracker(solutions, puzzle);
@@ -801,7 +839,7 @@ int main() {
 
 	//No solution :(
 	if (solutions.empty()) {
-		cout << "No Solutions for Provided State" << endl << endl;
+		cout << "No States for Provided Mode" << endl << endl;
 	}
 	
 	//Print Solutions
@@ -810,12 +848,23 @@ int main() {
 		//Check for duplicate solutions
 		deleteDuplicates(solutions);
 
+		//Calculate DiffcultyRating if we solved the whole thing
+		if (mode == 1) {
+			difficultyRate = (((5)*(pow(difficultyRate, (double)1/4)/4)*(numRows/6)*(numCols/6)) / solutions.size())+1;
+			if (difficultyRate > 10) {
+				//Just a catch for the crazy hard ones that disobey scaling
+				difficultyRate = 10;
+			}
+			cout << "This puzzle is rated a " << setprecision(4) << difficultyRate << " out of 10 (10 being extremely hard)" << endl;
+		}
+
 		//Display Solutions Returned to console
-		cout << "There is/are " << solutions.size() << " solution(s):" << endl;
+		cout << "There is/are " << solutions.size() << " state(s):" << endl;
 		while (!solutions.empty()) {
 			printPuzzle(solutions[solutions.size() - 1 ]);
 			solutions.pop_back();
 		}
+
 	}
 	
 	//Wait for input to close
