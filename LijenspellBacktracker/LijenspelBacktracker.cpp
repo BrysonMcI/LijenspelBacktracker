@@ -8,6 +8,7 @@
 // Aditional Details:
 //  Only supports single digit numbers in the grid.
 //  A 9 9 puzzle considered hard took about 5 seconds on my i7 4770. Woo!
+//  Supports solving from partial solutions/checking if you can still solve based on current state
 //  Little home made rating system, step by step, and until next guess modes made for creating puzzles
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,8 +16,6 @@
 #include <iostream> //Lots of IO
 #include <string>
 #include <algorithm>
-#include <cmath>
-#include <search.h> //Quick sort
 #include <fstream> //File streams
 #include <vector> //Basically a dynamic array
 #include <iomanip> //setprecision
@@ -287,7 +286,7 @@ void updateRemaining(char** puzzle) {
 }
 
 //The main backtracking function, handles creation of each step of a solution
-// returns: a 3d array holding all possible solutions (hopefully one).
+// returns: a 3d vector holding all possible solutions (hopefully one).
 void backtracker(vector<char**> &solutions, char** puzzleState) {
 	
 	if (mode == 3) {
@@ -307,7 +306,7 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 			puzzle[n][m] = puzzleState[n][m];
 		}
 	}
-	
+
 	//Update remaining values of puzzle.
 	updateRemaining(puzzle);
 
@@ -751,8 +750,6 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 		}
 		delete[]puzzle;
 
-
-
 		return;
 	}
 }
@@ -763,7 +760,7 @@ int main() {
 	//Open File For Input
 	//First line must be ROW COL
 	//Following lines will be x's representing spaces and appropriate numbers.
-	ifstream file ("puzzleEasy.txt");
+	ifstream file ("puzzle.txt");
 	string buffer;
 	getline(file, buffer);
 	//Read the top line for the size of puzzle
@@ -794,6 +791,9 @@ int main() {
 		for (int m = 0; m < numCols; m++) {
 			if (buffer[m] == 'x') {
 				puzzle[n][m] = ' ';
+			}
+			else if (buffer[m] == 'v' || buffer[m] == '^' || buffer[m] == '<' || buffer[m] == '>') {
+				puzzle[n][m] = buffer[m];
 			}
 			else {
 				puzzle[n][m] = buffer[m];

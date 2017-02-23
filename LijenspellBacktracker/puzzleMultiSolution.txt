@@ -1,5 +1,5 @@
 4 4
 xx3x
-1xxx
+2xxx
 xxx4
-x4xx
+x3xx
