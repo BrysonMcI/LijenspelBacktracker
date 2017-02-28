@@ -793,7 +793,6 @@ void puzzleCreation(char** puzzleState, vector<char**> solutions) {
 				}
 			}
 		}
-		printPuzzle(puzzle);
 		//Loop until we find a num to place
 		while (true) {
 			//Generate Next State
@@ -863,6 +862,7 @@ void puzzleCreation(char** puzzleState, vector<char**> solutions) {
 				newVal.row = curRow;
 				//Add number to numbers vector
 				numbers.push_back(newVal);
+				numNumbers++;
 				break;
 			}
 		}
