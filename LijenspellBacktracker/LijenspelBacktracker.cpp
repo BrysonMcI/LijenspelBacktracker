@@ -754,6 +754,148 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 	}
 }
 
+// Will create a puzzle using random methods along with pruning. The difficulty will tune the guesses needed to solve the puzzle.
+// Your puzzle.txt should follow the format of normal file inputs and can be anywhere from all X to completed (but why). In the end it will be overwritten with the completed puzzle.
+void puzzleCreation(char** puzzleState, vector<char**> solutions) {
+	
+	srand((int)time(0));
+
+	//Deep copy our current state
+	char** puzzle;
+	puzzle = new char *[numCols];
+
+	//Create and intialize puzzle
+	for (int n = 0; n < numCols; n++) {
+		puzzle[n] = new char[numRows];
+		for (int m = 0; m < numRows; m++) {
+			puzzle[n][m] = puzzleState[n][m];
+		}
+	}
+	
+	//Keeps track of the open spots in the puzzle
+	vector<vector<int>> availablecords;
+	mode = 1;
+	//Check Number of Solutions
+	
+	backtracker(solutions, puzzle);
+	while (isValid(puzzle) && !isSolved(puzzle)) {
+	//If one, write puzzle to output(Essentially break while loop)
+
+		availablecords.clear();
+		//Update avail spots bcause we may have filled some with arrows
+		for (int n = 0; n < numRows; n++) {
+			for (int m = 0; m < numCols; m++) {
+				if (puzzle[n][m] == ' ') {
+					vector <int> cord;
+					cord.push_back(n);
+					cord.push_back(m);
+					availablecords.push_back(cord);
+				}
+			}
+		}
+		printPuzzle(puzzle);
+		//Loop until we find a num to place
+		while (true) {
+			//Generate Next State
+			int randIndx = (rand() % availablecords.size());
+
+			vector <int> cord = availablecords[randIndx];
+			availablecords.erase(availablecords.begin() + randIndx);
+			int curRow = cord[0];
+			int curCol = cord[1];
+
+			//Calc largest number possible
+			//Go each direction to pick the limit on our rand number
+			int max = 0;
+			//Down
+			for (int row = curRow+1; row < numRows; row++) {
+				if (puzzle[row][curCol] != ' ') {
+					break;
+				}
+				else {
+					max++;
+				}
+			}
+			//Up
+			for (int row = curRow-1; row >= 0; row--) {
+				if (puzzle[row][curCol] != ' ') {
+					break;
+				}
+				else {
+					max++;
+				}
+			}
+			//Right
+			for (int col = curCol+1; col < numCols; col++) {
+				if (puzzle[curRow][col] != ' ') {
+					break;
+				}
+				else {
+					max++;
+				}
+			}
+			//Left
+			for (int col = curCol-1; col >= 0; col--) {
+				if (puzzle[curRow][col] != ' ') {
+					break;
+				}
+				else {
+					max++;
+				}
+			}
+
+			//Do we have a spot possible
+			if (max != 0) {
+				int randVal;
+				if (max != 1) {
+					randVal = (rand() % (max - 1) + 1);
+				}
+				else {
+					randVal = 1;
+				}
+				//Add number in random avail spot
+				puzzle[curRow][curCol] = randVal + '0';
+				number newVal;
+				newVal.value = randVal;
+				newVal.remaining = randVal;
+				newVal.curDir = 0;
+				newVal.col = curCol;
+				newVal.row = curRow;
+				//Add number to numbers vector
+				numbers.push_back(newVal);
+				break;
+			}
+		}
+		//Fill board till guess (or randomly decide to guess)
+		mode = 2;
+		solutions.clear();
+		backtracker(solutions, puzzle);
+		//Solutions will contain a completed puzzle till guess is needed (IF there were any)
+		if (solutions.size() != 0) {
+			for (int n = 0; n < numCols; n++) {
+				for (int m = 0; m < numRows; m++) {
+					puzzle[n][m] = solutions[0][n][m];
+				}
+			}
+		}
+		solutions.clear();
+		//Switch to solve mode for conditional
+		mode = 1;
+		backtracker(solutions, puzzle);
+	}
+	//Check for unsolveable, run again if fail
+	//This is pretty lazy coding, but it allows us to not have to worry about going backwards.
+	if (solutions.size() == 0) {
+		puzzleCreation(puzzleState, solutions);
+	}
+	//Write to output
+	else{
+		printPuzzle(puzzle);
+		system("pause");
+	}
+	return;
+}
+
 //Entry point for the backtracker, handles IO, printing, and starting the backtracking
 int main() {
 
@@ -824,15 +966,24 @@ int main() {
 	cout << "1 - Solve" << endl;
 	cout << "2 - Solve until guess" << endl;
 	cout << "3 - One Step At a Time" << endl;
+	cout << "4 - Creation Mode" << endl;
 	cout << "Number: ";
 
 	cin >> mode;
 
 	cout << endl;
 
+	vector<char**> solutions;
+
+	if (mode == 4) {
+		mode = 1;
+		puzzleCreation(puzzle, solutions);
+		return 0;
+	}
+
 	difficultyRate = 0;
 	//Call backtracker and let it return a 3d array of puzzle solutions
-	vector<char**> solutions;
+	
 	backtracker(solutions, puzzle);
 
 	delete[]puzzle;
