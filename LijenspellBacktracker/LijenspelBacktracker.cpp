@@ -1029,7 +1029,7 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 	}
 	delete[]squares;
 	delete[]spaceUsed;
-
+	printPuzzle(puzzle);
 	//Drop numbers on -1s 
 	while (!avaiableCords.empty()) {
 		int idx = rand() % avaiableCords.size();

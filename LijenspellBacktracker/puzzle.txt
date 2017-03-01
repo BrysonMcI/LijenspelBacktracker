@@ -1,7 +1,8 @@
-6 6
-2>xx<2
-v^1xxv
-x1vxxx
-xxx1^x
-^xxv1^
-2>xx<2
+7 7
+<<3^xxx
+x^v^xxx
+x^^^xxx
+x^^6>>>
+x^4>><3
+x8>>>>v
+xxxxxxv
