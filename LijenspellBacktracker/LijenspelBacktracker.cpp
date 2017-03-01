@@ -3,16 +3,22 @@
 // Rules and puzzles can be found at http://puzzlepicnic.com/genre?id=51.
 // Author: Bryson McIver
 // Created: 2/3/2017
-// Last Update: 2/23/2017
+// Last Update: 2/28/2017
 //
-//  90% Sure Puzzle Creation takes up more memory than it really needs, working on it.
+//	
 //
+//  10% Sure Puzzle Creation takes up more memory than it really needs, working on it.
+//  Puzzle creation now works though! Supports partially made puzzles! Finishes creation for you! Create from scratch!
+//  Run with puzzle.txt in the normal format, but put all x in for the grid (or a partial creation) and select option 4 in the menu.
+//  Example currently in puzzle.txt
+//
+//  Note: Creation can take a long time, there's a lot of branching, some of which is pretty random. 6x6 seems to take anywhere between 1 and 10 minutes.
 //
 // Aditional Details:
 //  Only supports single digit numbers in the grid.
 //  A 9 9 puzzle considered hard took about 5 seconds on my i7 4770. Woo!
 //  Supports solving from partial solutions/checking if you can still solve based on current state
-//  Little home made rating system, step by step, and until next guess modes made for creating puzzles
+//  Little home made rating system, step by step, and until next guess modes made for creating puzzles (by hand)
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -523,6 +529,15 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 							for (int l = 0; l < numNumbers; l++) {
 								numbers[l].remaining += spaceUsed[l];
 							}
+							for (int n = 0; n < numCols; n++) {
+								delete[]puzzle[n];
+							}
+							delete[]puzzle;
+							for (int n = 0; n < numCols; n++) {
+								delete[]squares[n];
+							}
+							delete[]squares;
+							delete[]spaceUsed;
 							return;
 						}
 						spaceUsed[k]++;
@@ -548,6 +563,15 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 							for (int l = 0; l < numNumbers; l++) {
 								numbers[l].remaining += spaceUsed[l];
 							}
+							for (int n = 0; n < numCols; n++) {
+								delete[]puzzle[n];
+							}
+							delete[]puzzle;
+							for (int n = 0; n < numCols; n++) {
+								delete[]squares[n];
+							}
+							delete[]squares;
+							delete[]spaceUsed;
 							return;
 						}
 						puzzle[curRow][j] = '>';
@@ -573,6 +597,15 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 							for (int l = 0; l < numNumbers; l++) {
 								numbers[l].remaining += spaceUsed[l];
 							}
+							for (int n = 0; n < numCols; n++) {
+								delete[]puzzle[n];
+							}
+							delete[]puzzle;
+							for (int n = 0; n < numCols; n++) {
+								delete[]squares[n];
+							}
+							delete[]squares;
+							delete[]spaceUsed;
 							return;
 						}
 						puzzle[j][curCol] = 'v';
@@ -598,6 +631,15 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 							for (int l = 0; l < numNumbers; l++) {
 								numbers[l].remaining += spaceUsed[l];
 							}
+							for (int n = 0; n < numCols; n++) {
+								delete[]puzzle[n];
+							}
+							delete[]puzzle;
+							for (int n = 0; n < numCols; n++) {
+								delete[]squares[n];
+							}
+							delete[]squares;
+							delete[]spaceUsed;
 							return;
 						}
 						puzzle[curRow][j] = '<';
@@ -614,6 +656,15 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 				for (int i = 0; i < numNumbers; i++) {
 					numbers[i].remaining += spaceUsed[i];
 				}
+				for (int n = 0; n < numCols; n++) {
+					delete[]puzzle[n];
+				}
+				delete[]puzzle;
+				for (int n = 0; n < numCols; n++) {
+					delete[]squares[n];
+				}
+				delete[]squares;
+				delete[]spaceUsed;
 				return;
 			}
 		}
@@ -628,6 +679,11 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 		for (int k = 0; k < numNumbers; k++) {
 			if (spaceUsed[k] != 0) {
 				backtracker(solutions, puzzle);
+				for (int n = 0; n < numCols; n++) {
+					delete[]puzzle[n];
+				}
+				delete[]puzzle;
+				delete[]spaceUsed;
 				return;
 			}
 		}
@@ -1046,8 +1102,11 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 				}
 			}
 		}
+		vector<int>().swap(cord);
+		vector<int>().swap(avaiableCords[idx]);
 		avaiableCords.erase(avaiableCords.begin() + idx);
 	}
+	vector<vector<int>>().swap(avaiableCords);
 	//Clean up
 	for (int n = 0; n < numCols; n++) {
 		delete[]puzzle[n];

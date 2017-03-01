@@ -1,5 +1,7 @@
-4 4
-xxxx
-xxxx
-xxxx
-xxxx
+6 6
+2>xx<2
+v^1xxv
+x1vxxx
+xxx1^x
+^xxv1^
+2>xx<2
