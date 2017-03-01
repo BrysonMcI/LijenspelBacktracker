@@ -5,6 +5,9 @@
 // Created: 2/3/2017
 // Last Update: 2/23/2017
 //
+//  90% Sure Puzzle Creation takes up more memory than it really needs, working on it.
+//
+//
 // Aditional Details:
 //  Only supports single digit numbers in the grid.
 //  A 9 9 puzzle considered hard took about 5 seconds on my i7 4770. Woo!
@@ -221,8 +224,6 @@ bool isValid(char** puzzle) {
 			return false;
 		}
 	}
-
-	//Also check if all the spaces can be reached
 
 	return true;
 }
@@ -485,6 +486,15 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 		for (int m = 0; m < numRows; m++) {
 			for (int n = 0; n < numCols; n++) {
 				if (squares[m][n] == -1) {
+					for (int n = 0; n < numCols; n++) {
+						delete[]squares[n];
+					}
+					delete[]squares;
+					delete[]spaceUsed;
+					for (int n = 0; n < numCols; n++) {
+						delete[]puzzle[n];
+					}
+					delete[]puzzle;
 					return;
 				}
 			}
@@ -756,8 +766,8 @@ void backtracker(vector<char**> &solutions, char** puzzleState) {
 
 // Will create a puzzle using random methods along with pruning. The difficulty will tune the guesses needed to solve the puzzle.
 // Your puzzle.txt should follow the format of normal file inputs and can be anywhere from all X to completed (but why). In the end it will be overwritten with the completed puzzle.
-void puzzleCreation(char** puzzleState, vector<char**> solutions) {
-	
+void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
+
 	srand((int)time(0));
 
 	//Deep copy our current state
@@ -771,129 +781,278 @@ void puzzleCreation(char** puzzleState, vector<char**> solutions) {
 			puzzle[n][m] = puzzleState[n][m];
 		}
 	}
-	
-	//Keeps track of the open spots in the puzzle
-	vector<vector<int>> availablecords;
-	mode = 1;
-	//Check Number of Solutions
-	
-	backtracker(solutions, puzzle);
-	while (isValid(puzzle) && !isSolved(puzzle)) {
-	//If one, write puzzle to output(Essentially break while loop)
 
-		availablecords.clear();
-		//Update avail spots bcause we may have filled some with arrows
-		for (int n = 0; n < numRows; n++) {
-			for (int m = 0; m < numCols; m++) {
-				if (puzzle[n][m] == ' ') {
-					vector <int> cord;
-					cord.push_back(n);
-					cord.push_back(m);
-					availablecords.push_back(cord);
-				}
+	//Update remaining values of puzzle.
+	updateRemaining(puzzle);
+	//Not valid, don't continue
+	if (!isValid(puzzle)) {
+		for (int n = 0; n < numCols; n++) {
+			delete[]puzzle[n];
+		}
+		delete[]puzzle;
+		return;
+	}
+	//Check if we have solveable puzzle
+	backtracker(solutions, puzzle);
+	if (solutions.size() == 1) {
+		mode = 1;
+		return;
+	}
+	solutions.clear();
+
+	//Need a duplicate sized grid of ints
+	int** squares;
+	squares = new int *[numCols];
+	int* spaceUsed = new int[numNumbers];
+
+	for (int i = 0; i < numNumbers; i++) {
+		spaceUsed[i] = 0;
+	}
+
+	//Create and intialize our new grid
+	for (int n = 0; n < numCols; n++) {
+		squares[n] = new int[numRows];
+		for (int m = 0; m < numRows; m++) {
+			if (puzzle[n][m] == '^') {
+				squares[n][m] = 0;
+			}
+			else if (puzzle[n][m] == '>') {
+				squares[n][m] = 1;
+			}
+			else if (puzzle[n][m] == 'v') {
+				squares[n][m] = 2;
+			}
+			else if (puzzle[n][m] == '<') {
+				squares[n][m] = 3;
+			}
+			else {
+				squares[n][m] = -1;
 			}
 		}
-		//Loop until we find a num to place
-		while (true) {
-			//Generate Next State
-			int randIndx = (rand() % availablecords.size());
+	}
 
-			vector <int> cord = availablecords[randIndx];
-			availablecords.erase(availablecords.begin() + randIndx);
-			int curRow = cord[0];
-			int curCol = cord[1];
+	//Now loop through all the numbers, if a square can be touched it gets the corresponding index of the arrow
+	// it would have in the arrows array.
+	// If it stays at -1, we know we have an invalid 
+	// 4 Means a number is there
+	// If it is a 5, then it has multiple options and will be ignored
+	// In the end numbers will be filled in with their arrows on the puzzle board
+	for (int k = 0; k < numNumbers; k++) {
+		int curRow = numbers[k].row;
+		int curCol = numbers[k].col;
+		squares[curRow][curCol] = 4;
+		//Loop in all directions setting numbers;
+		//Up
+		int remaining = numbers[k].remaining;
+		for (int i = curRow - 1; i >= 0; i--) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (puzzle[i][curCol] != ' ' && puzzle[i][curCol] != '^') {
+				//Not empty, not right direction, dead end
+				break;
+			}
+			else if (puzzle[i][curCol] == ' ') {
+				if (squares[i][curCol] == -1) {
+					//We can set this square
+					squares[i][curCol] = 0;
+				}
+				else {
+					//Someone else has already been here
+					squares[i][curCol] = 5;
+				}
+			}
+			else {
+				//This square was already taken by a good arrow and doesn't cost us.
+				remaining++;
+			}
+		}
+		//Right
+		remaining = numbers[k].remaining;
+		for (int i = curCol + 1; i < numCols; i++) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (puzzle[curRow][i] != ' ' && puzzle[curRow][i] != '>') {
+				//Not empty, not right direction, dead end
+				break;
+			}
+			else if (puzzle[curRow][i] == ' ') {
+				if (squares[curRow][i] == -1) {
+					//We can set this square
+					squares[curRow][i] = 1;
+				}
+				else {
+					//Someone else has already been here
+					squares[curRow][i] = 5;
+					//We don't stop because a farther square could matter more.
+				}
+			}
+			else {
+				//This square was already taken by a good arrow and doesn't cost us.
+				remaining++;
+			}
+		}
+		//Down
+		remaining = numbers[k].remaining;
+		for (int i = curRow + 1; i < numRows; i++) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (puzzle[i][curCol] != ' ' && puzzle[i][curCol] != 'v') {
+				//Not empty, not right direction, dead end
+				break;
+			}
+			else if (puzzle[i][curCol] == ' ') {
+				if (squares[i][curCol] == -1) {
+					//We can set this square
+					squares[i][curCol] = 2;
+				}
+				else {
+					//Someone else has already been here
+					squares[i][curCol] = 5;
+				}
+			}
+			else {
+				//This square was already taken by a good arrow and doesn't cost us.
+				remaining++;
+			}
+		}
+		//Left
+		remaining = numbers[k].remaining;
+		for (int i = curCol - 1; i >= 0; i--) {
+			remaining--;
+			//This number can't reach in this direction any longer
+			if (remaining < 0) {
+				break;
+			}
+			if (puzzle[curRow][i] != ' ' && puzzle[curRow][i] != '<') {
+				//Not empty, not right direction, dead end
+				break;
+			}
+			else if (puzzle[curRow][i] == ' ') {
+				if (squares[curRow][i] == -1) {
+					//We can set this square
+					squares[curRow][i] = 3;
+				}
+				else {
+					//Someone else has already been here
+					squares[curRow][i] = 5;
+					//We don't stop because a farther square could matter more.
+				}
+			}
+			else {
+				//This square was already taken by a good arrow and doesn't cost us.
+				remaining++;
+			}
+		}
+	}
 
-			//Calc largest number possible
-			//Go each direction to pick the limit on our rand number
-			int max = 0;
-			//Down
-			for (int row = curRow+1; row < numRows; row++) {
-				if (puzzle[row][curCol] != ' ') {
-					break;
-				}
-				else {
-					max++;
-				}
+	vector<vector<int>> avaiableCords;
+	//Check to see if a space can't be reached (Essentially another is valid check with a new criteria)
+	for (int m = 0; m < numRows; m++) {
+		for (int n = 0; n < numCols; n++) {
+			if (squares[m][n] == -1) {
+				vector<int> cord;
+				cord.push_back(m);
+				cord.push_back(n);
+				avaiableCords.push_back(cord);
 			}
-			//Up
-			for (int row = curRow-1; row >= 0; row--) {
-				if (puzzle[row][curCol] != ' ') {
-					break;
-				}
-				else {
-					max++;
-				}
-			}
-			//Right
-			for (int col = curCol+1; col < numCols; col++) {
-				if (puzzle[curRow][col] != ' ') {
-					break;
-				}
-				else {
-					max++;
-				}
-			}
-			//Left
-			for (int col = curCol-1; col >= 0; col--) {
-				if (puzzle[curRow][col] != ' ') {
-					break;
-				}
-				else {
-					max++;
-				}
-			}
+		}
+	}
 
-			//Do we have a spot possible
-			if (max != 0) {
-				int randVal;
-				if (max != 1) {
-					randVal = (rand() % (max - 1) + 1);
-				}
-				else {
-					randVal = 1;
-				}
-				//Add number in random avail spot
-				puzzle[curRow][curCol] = randVal + '0';
-				number newVal;
-				newVal.value = randVal;
-				newVal.remaining = randVal;
-				newVal.curDir = 0;
-				newVal.col = curCol;
-				newVal.row = curRow;
-				//Add number to numbers vector
-				numbers.push_back(newVal);
-				numNumbers++;
+	//Clean up
+	for (int n = 0; n < numCols; n++) {
+		delete[]squares[n];
+	}
+	delete[]squares;
+	delete[]spaceUsed;
+
+	//Drop numbers on -1s 
+	while (!avaiableCords.empty()) {
+		int idx = rand() % avaiableCords.size();
+		vector<int> cord = avaiableCords[idx];
+		int curRow = cord[0];
+		int curCol = cord[1];
+		//Find sizes that can fit there
+		int max = 0;
+		//Up
+		for (int i = curRow - 1; i >= 0; i--) {
+			//This number can reach in this direction any longer
+			if (puzzle[i][curCol] == ' ') {
+				max++;
+			}
+			else {
 				break;
 			}
 		}
-		//Fill board till guess (or randomly decide to guess)
-		mode = 2;
-		solutions.clear();
-		backtracker(solutions, puzzle);
-		//Solutions will contain a completed puzzle till guess is needed (IF there were any)
-		if (solutions.size() != 0) {
-			for (int n = 0; n < numCols; n++) {
-				for (int m = 0; m < numRows; m++) {
-					puzzle[n][m] = solutions[0][n][m];
+		//Right			
+		for (int i = curCol + 1; i < numCols; i++) {
+			//This number can't reach in this direction any longer	
+			if (puzzle[curRow][i] == ' ') {
+				max++;
+			}
+			else {
+				break;
+			}
+		}
+		//Down
+		for (int i = curRow + 1; i < numRows; i++) {
+			//This number can't reach in this direction any longer
+			if (puzzle[i][curCol] == ' ') {
+				max++;
+			}
+			else {
+				break;
+			}
+		}
+		//Left
+		for (int i = curCol - 1; i >= 0; i--) {
+			if (puzzle[curRow][i] == ' ') {
+				max++;
+			}
+			else {
+				break;
+			}
+		}
+		if (max != 0) {
+			int size = (rand() % max) + 1;
+			puzzle[curRow][curCol] = size + '0';
+			number num;
+			num.value = size;
+			num.remaining = size;
+			num.col = curCol;
+			num.row = curRow;
+			num.curDir = 0;
+			numbers.push_back(num);
+			numNumbers++;
+			//Recurse
+			puzzleCreation(puzzle, solutions);
+			if (solutions.size() == 1) {
+				mode = 1;
+				return;
+			}
+			numNumbers--;
+			
+			for (int i = 0; i < numbers.size(); i++) {
+				if (numbers[i].row == num.row && numbers[i].col == num.col) {
+					numbers.erase(numbers.begin() + i);
 				}
 			}
 		}
-		solutions.clear();
-		//Switch to solve mode for conditional
-		mode = 1;
-		backtracker(solutions, puzzle);
+		avaiableCords.erase(avaiableCords.begin() + idx);
 	}
-	//Check for unsolveable, run again if fail
-	//This is pretty lazy coding, but it allows us to not have to worry about going backwards.
-	if (solutions.size() == 0) {
-		puzzleCreation(puzzleState, solutions);
+	//Clean up
+	for (int n = 0; n < numCols; n++) {
+		delete[]puzzle[n];
 	}
-	//Write to output
-	else{
-		printPuzzle(puzzle);
-		system("pause");
-	}
-	return;
+	delete[]puzzle;
 }
 
 //Entry point for the backtracker, handles IO, printing, and starting the backtracking
@@ -975,16 +1134,14 @@ int main() {
 
 	vector<char**> solutions;
 
-	if (mode == 4) {
-		mode = 1;
-		puzzleCreation(puzzle, solutions);
-		return 0;
-	}
-
 	difficultyRate = 0;
 	//Call backtracker and let it return a 3d array of puzzle solutions
-	
-	backtracker(solutions, puzzle);
+	if (mode == 4) {
+		puzzleCreation(puzzle, solutions);
+	}
+	else {
+		backtracker(solutions, puzzle);
+	}
 
 	delete[]puzzle;
 
