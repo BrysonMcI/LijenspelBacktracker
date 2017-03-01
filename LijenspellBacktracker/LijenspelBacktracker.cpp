@@ -5,6 +5,9 @@
 // Created: 2/3/2017
 // Last Update: 2/28/2017
 //
+//  Adding human strategy to look if a a number needs to use a space to complete itself
+//  Currently for speeding up creation pruning, but should be easy to move into the backtracker once it works
+//
 //	Outputs solution to solution.txt and a fresh clean board at original.txt
 //
 //  10% Sure Puzzle Creation takes up more memory than it really needs, working on it.
@@ -289,6 +292,189 @@ void updateRemaining(char** puzzle) {
 
 	//Re-sort based on remaining
 	sort(numbers.begin(), numbers.end(), numbersSorter);
+
+}
+
+//This fancy function figures out if someone needs a square to be solved and if there are collisions on these squares.
+int** needySquares(int** squares, number currNum) {
+
+	number numCopy;
+	numCopy.col = currNum.col;
+	numCopy.row = currNum.row;
+	numCopy.value = currNum.value;
+	numCopy.remaining = currNum.remaining-1;
+	numCopy.curDir = currNum.curDir;
+
+	//Deep copy our current state
+	int** newSquares;
+	newSquares = new int *[numCols];
+
+	//Create and intialize squares
+	for (int n = 0; n < numCols; n++) {
+		newSquares[n] = new int[numRows];
+		for (int m = 0; m < numRows; m++) {
+			newSquares[n][m] = squares[n][m];
+		}
+	}
+
+	if (numCopy.remaining == -1) {
+		//This is a complete state and has been marked up.
+		return newSquares;
+	}
+	else {
+		//We are gonna recurse if we can in each direction
+		int curRow = numCopy.row;
+		int curCol = numCopy.col;
+		
+		//Up
+		int tempRemain = numCopy.remaining;
+		int** boardUp;
+		for (int n = curRow - 1; n > -1; n--) {
+			if (tempRemain == 0) {
+				break;
+			}
+			if (newSquares[n][curCol] == -1) {
+				newSquares[n][curCol] = 6;
+				boardUp = needySquares(newSquares, numCopy);
+				newSquares[n][curCol] == -1;
+				break;
+			}
+			//Already deemed needed or used
+			if (newSquares[n][curCol] == 0 || newSquares[n][curCol] == 6)
+			{
+				if (newSquares[n][curCol] == 0) {
+					tempRemain++;
+				}
+				//Set to 6 just to change all ups to 6 because it makes comparison later easier
+				newSquares[n][curCol] = 6;
+				tempRemain--;
+			}
+			else {
+				//If we got nothing done in this direction, null board
+				boardUp = NULL;
+				break;
+			}
+		}		
+		//Right
+		tempRemain = numCopy.remaining;
+		int** boardRight;
+		for (int n = curCol + 1; n < numCols; n++) {
+			if (tempRemain == 0) {
+				break;
+			}
+			if (newSquares[curRow][n] == -1) {
+				newSquares[curRow][n] = 6;
+				boardRight = needySquares(newSquares, numCopy);
+				newSquares[curRow][n] == -1;
+				break;
+			}
+			//Already deemed needed or used
+			if (newSquares[curRow][n] == 1 || newSquares[curRow][n] == 6)
+			{
+				if (newSquares[curRow][n] == 1) {
+					tempRemain++;
+				}
+				newSquares[curRow][n] = 6;
+				tempRemain--;
+			}
+			else {
+				boardRight = NULL;
+				break;
+			}
+		}
+		//Down
+		tempRemain = numCopy.remaining;
+		int** boardDown;
+		for (int n = curRow + 1; n < numRows; n++) {
+			if (tempRemain == 0) {
+				break;
+			}
+			if (newSquares[n][curCol] == -1) {
+				newSquares[n][curCol] = 6;
+				boardUp = needySquares(newSquares, numCopy);
+				newSquares[n][curCol] == -1;
+				break;
+			}
+			//Already deemed needed or used
+			if (newSquares[n][curCol] == 2 || newSquares[n][curCol] == 6)
+			{
+				if (newSquares[n][curCol] == 2) {
+					tempRemain++;
+				}
+				newSquares[n][curCol] = 6;
+				tempRemain--;
+			}
+			else {
+				boardDown = NULL;
+				break;
+			}
+		}
+		//left
+		tempRemain = numCopy.remaining;
+		int** boardLeft;
+		for (int n = curCol - 1; n > -1; n--) {
+			if (tempRemain == 0) {
+				break;
+			}
+			if (newSquares[curRow][n] == -1) {
+				newSquares[curRow][n] = 6;
+				boardLeft = needySquares(newSquares, numCopy);
+				newSquares[curRow][n] == -1;
+				break;
+			}
+			//Already deemed needed or used
+			if (newSquares[curRow][n] == 3 || newSquares[curRow][n] == 6)
+			{
+				if (newSquares[curRow][n] == 3) {
+					tempRemain++;
+				}
+				newSquares[curRow][n] = 6;
+				tempRemain--;
+			}
+			else {
+				boardLeft = NULL;
+				break;
+			}
+		}
+		//Compare four boards, if they have similarities thats a required spot
+		//If its NULL then they are all matches!
+
+		int** returnBoard = boardUp;
+		if (returnBoard == NULL) {
+			returnBoard = boardRight;
+		}
+		//Compare with board right if we can
+
+		//LOOP BOARDS
+		//CHECK IF SPOT IS EQUIV
+		//IF EQUIV KEEP
+		//ELSE TURN TO -1
+		//I THINK
+
+		else if (boardRight != NULL) {
+			
+		}
+		if (returnBoard == NULL) {
+			returnBoard = boardDown;
+		}
+		//Compare with board right if we can
+		else if (boardDown != NULL) {
+
+		}
+		if (returnBoard == NULL) {
+			returnBoard = boardLeft;
+		}
+		//Compare with board right if we can
+		else if (boardLeft != NULL) {
+
+		}
+
+
+
+		//Return our needed numbers board
+		return returnBoard;
+	}
+
 
 }
 
@@ -1023,13 +1209,28 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 		}
 	}
 
-	//Clean up
-	for (int n = 0; n < numCols; n++) {
-		delete[]squares[n];
+	//Call funcion to find squares that need to be touched by certain numbers, 
+	//We can use this added info to the squares matrix to limit the max of our new number to avoid these spots.
+	//The looping is so that we can update each number, but use recursion easily in this friendly healper function
+	int*** requiredSquares;
+	requiredSquares = new int**[numNumbers];
+	for (int n = 0; n < numNumbers; n++) {
+		requiredSquares[n] = needySquares(squares, numbers[n]);
+		for (int m = 0; m < n; m++) {
+			//Check newest version with all older version. This way we don't do this all the way if we don't need to
+			for (int i = 0; i < numRows; i++) {
+				for (int j = 0; j < numCols; j++) {
+					if (requiredSquares[m][i][j] == 6 && requiredSquares[n][i][j] == 6) {
+						//Two numbers needed same square (both set to six) baillll
+						return;
+					}
+				}
+			}
+		}
 	}
-	delete[]squares;
-	delete[]spaceUsed;
-	printPuzzle(puzzle);
+
+
+	delete[]requiredSquares;
 	//Drop numbers on -1s 
 	while (!avaiableCords.empty()) {
 		int idx = rand() % avaiableCords.size();
@@ -1077,6 +1278,29 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 				break;
 			}
 		}
+		
+		//Check number of open squares and the number of needed squares.
+		int needSquares = 0;
+		for (int n = 0; n < numNumbers; n++) {
+			needSquares += numbers[n].remaining;
+		}
+		int openSquares = 0;
+		for (int n = 0; n < numRows; n++) {
+			for (int m = 0; m < numCols; m++) {
+				if (puzzle[n][m] == ' ') {
+					openSquares++;
+				}
+			}
+		}
+		//Not valid
+		if (needSquares > openSquares) {
+			return;
+		}
+		//Max is wrong
+		if (max > openSquares) {
+			max = openSquares;
+		}
+
 		if (max != 0) {
 			int size = (rand() % max) + 1;
 			puzzle[curRow][curCol] = size + '0';
@@ -1106,6 +1330,12 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 		vector<int>().swap(avaiableCords[idx]);
 		avaiableCords.erase(avaiableCords.begin() + idx);
 	}
+	//Clean up
+	for (int n = 0; n < numCols; n++) {
+		delete[]squares[n];
+	}
+	delete[]squares;
+	delete[]spaceUsed;
 	vector<vector<int>>().swap(avaiableCords);
 	//Clean up
 	for (int n = 0; n < numCols; n++) {
