@@ -5,7 +5,7 @@
 // Created: 2/3/2017
 // Last Update: 2/28/2017
 //
-//	
+//	Outputs solution to solution.txt and a fresh clean board at original.txt
 //
 //  10% Sure Puzzle Creation takes up more memory than it really needs, working on it.
 //  Puzzle creation now works though! Supports partially made puzzles! Finishes creation for you! Create from scratch!
@@ -1227,11 +1227,39 @@ int main() {
 
 		//Display Solutions Returned to console
 		cout << "There is/are " << solutions.size() << " state(s):" << endl;
+		if (solutions.size() == 1) {
+			//File output if only one solution
+			ofstream solution;
+			solution.open("solution.txt");
+			solution << numRows << " " << numCols << "\n";
+			for (int n = 0; n < numRows; n++) {
+				for (int m = 0; m < numCols; m++) {
+					solution << solutions[0][n][m];
+				}
+				solution << endl;
+			}
+			solution.close();
+			ofstream original;
+			original.open("original.txt");
+			original << numRows << " " << numCols << endl;
+			for (int n = 0; n < numRows; n++) {
+				for (int m = 0; m < numCols; m++) {
+					if (solutions[0][n][m] == '<' || solutions[0][n][m] == '>' || solutions[0][n][m] == 'v' || solutions[0][n][m] == '^') {
+						original << 'x';
+					}
+					else {
+						original << solutions[0][n][m];
+					}				
+				}
+				original << endl;
+			}
+			original.close();
+
+		}
 		while (!solutions.empty()) {
 			printPuzzle(solutions[solutions.size() - 1 ]);
 			solutions.pop_back();
 		}
-
 	}
 	
 	//Wait for input to close
