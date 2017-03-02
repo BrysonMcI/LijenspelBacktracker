@@ -1,5 +1,7 @@
-4 4
-xx11
-1x1x
-xxx3
-x3xx
+6 6
+x3xxxx
+4xxxx3
+1x2xxx
+xxx3xx
+x7xxxx
+1xxx3x

@@ -328,7 +328,7 @@ int** needySquares(int** squares, number currNum) {
 		
 		//Up
 		int tempRemain = numCopy.remaining;
-		int** boardUp;
+		int** boardUp = NULL;
 		for (int n = curRow - 1; n > -1; n--) {
 			if (tempRemain == 0) {
 				break;
@@ -336,7 +336,7 @@ int** needySquares(int** squares, number currNum) {
 			if (newSquares[n][curCol] == -1) {
 				newSquares[n][curCol] = 6;
 				boardUp = needySquares(newSquares, numCopy);
-				newSquares[n][curCol] == -1;
+				newSquares[n][curCol] = -1;
 				break;
 			}
 			//Already deemed needed or used
@@ -357,7 +357,7 @@ int** needySquares(int** squares, number currNum) {
 		}		
 		//Right
 		tempRemain = numCopy.remaining;
-		int** boardRight;
+		int** boardRight = NULL;
 		for (int n = curCol + 1; n < numCols; n++) {
 			if (tempRemain == 0) {
 				break;
@@ -365,7 +365,7 @@ int** needySquares(int** squares, number currNum) {
 			if (newSquares[curRow][n] == -1) {
 				newSquares[curRow][n] = 6;
 				boardRight = needySquares(newSquares, numCopy);
-				newSquares[curRow][n] == -1;
+				newSquares[curRow][n] = -1;
 				break;
 			}
 			//Already deemed needed or used
@@ -384,7 +384,7 @@ int** needySquares(int** squares, number currNum) {
 		}
 		//Down
 		tempRemain = numCopy.remaining;
-		int** boardDown;
+		int** boardDown = NULL;
 		for (int n = curRow + 1; n < numRows; n++) {
 			if (tempRemain == 0) {
 				break;
@@ -392,7 +392,7 @@ int** needySquares(int** squares, number currNum) {
 			if (newSquares[n][curCol] == -1) {
 				newSquares[n][curCol] = 6;
 				boardUp = needySquares(newSquares, numCopy);
-				newSquares[n][curCol] == -1;
+				newSquares[n][curCol] = -1;
 				break;
 			}
 			//Already deemed needed or used
@@ -411,7 +411,7 @@ int** needySquares(int** squares, number currNum) {
 		}
 		//left
 		tempRemain = numCopy.remaining;
-		int** boardLeft;
+		int** boardLeft = NULL;
 		for (int n = curCol - 1; n > -1; n--) {
 			if (tempRemain == 0) {
 				break;
@@ -419,7 +419,7 @@ int** needySquares(int** squares, number currNum) {
 			if (newSquares[curRow][n] == -1) {
 				newSquares[curRow][n] = 6;
 				boardLeft = needySquares(newSquares, numCopy);
-				newSquares[curRow][n] == -1;
+				newSquares[curRow][n] = -1;
 				break;
 			}
 			//Already deemed needed or used
@@ -452,25 +452,70 @@ int** needySquares(int** squares, number currNum) {
 		//I THINK
 
 		else if (boardRight != NULL) {
-			
+			for (int i = 0; i < numRows; i++) {
+				for (int j = 0; j < numCols; j++) {
+					if (boardRight[i][j] != returnBoard[i][j]) {
+						returnBoard[i][j] = -1;
+					}
+				}
+			}
 		}
 		if (returnBoard == NULL) {
 			returnBoard = boardDown;
 		}
 		//Compare with board right if we can
 		else if (boardDown != NULL) {
-
+			for (int i = 0; i < numRows; i++) {
+				for (int j = 0; j < numCols; j++) {
+					if (boardDown[i][j] != returnBoard[i][j]) {
+						returnBoard[i][j] = -1;
+					}
+				}
+			}
 		}
 		if (returnBoard == NULL) {
 			returnBoard = boardLeft;
 		}
 		//Compare with board right if we can
 		else if (boardLeft != NULL) {
-
+			for (int i = 0; i < numRows; i++) {
+				for (int j = 0; j < numCols; j++) {
+					if (boardLeft[i][j] != returnBoard[i][j]) {
+						returnBoard[i][j] = -1;
+					}
+				}
+			}
 		}
 
 
-
+		for (int n = 0; n < numCols; n++) {
+			delete[]newSquares[n];
+		}
+		delete[]newSquares;
+		if (boardUp != NULL) {
+			for (int n = 0; n < numCols; n++) {
+				delete[]boardUp[n];
+			}
+			delete[]boardUp;
+		}
+		if (boardRight != NULL) {
+			for (int n = 0; n < numCols; n++) {
+				delete[]boardRight[n];
+			}
+			delete[]boardRight;
+		}
+		if (boardDown != NULL) {
+			for (int n = 0; n < numCols; n++) {
+				delete[]boardDown[n];
+			}
+			delete[]boardDown;
+		}
+		if (boardLeft != NULL) {
+			for (int n = 0; n < numCols; n++) {
+				delete[]boardLeft[n];
+			}
+			delete[]boardLeft;
+		}
 		//Return our needed numbers board
 		return returnBoard;
 	}
@@ -1024,6 +1069,7 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 		}
 	}
 
+
 	//Update remaining values of puzzle.
 	updateRemaining(puzzle);
 	//Not valid, don't continue
@@ -1220,17 +1266,36 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 			//Check newest version with all older version. This way we don't do this all the way if we don't need to
 			for (int i = 0; i < numRows; i++) {
 				for (int j = 0; j < numCols; j++) {
-					if (requiredSquares[m][i][j] == 6 && requiredSquares[n][i][j] == 6) {
-						//Two numbers needed same square (both set to six) baillll
-						return;
+					if (requiredSquares[m] != NULL && requiredSquares[n] != NULL) {
+						if ((requiredSquares[m][i][j] == 6 && requiredSquares[n][i][j] == 6)) {
+							//Two numbers needed same square (both set to six) baillll
+							for (int n = 0; n < numNumbers; n++) {
+								delete[]requiredSquares[n];
+							}
+							delete[]requiredSquares;
+							for (int n = 0; n < numCols; n++) {
+								delete[]squares[n];
+							}
+							delete[]squares;
+							delete[]spaceUsed;
+							for (int n = 0; n < numCols; n++) {
+								delete[]puzzle[n];
+							}
+							delete[]puzzle;
+							vector<vector<int>>().swap(avaiableCords);
+							return;
+						}
 					}
 				}
 			}
 		}
 	}
 
-
+	for (int n = 0; n < numNumbers; n++) {
+		delete[]requiredSquares[n];
+	}
 	delete[]requiredSquares;
+	
 	//Drop numbers on -1s 
 	while (!avaiableCords.empty()) {
 		int idx = rand() % avaiableCords.size();
@@ -1294,6 +1359,10 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 		}
 		//Not valid
 		if (needSquares > openSquares) {
+			for (int n = 0; n < numCols; n++) {
+				delete[]squares[n];
+			}
+			delete[]squares;
 			return;
 		}
 		//Max is wrong
@@ -1302,29 +1371,39 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 		}
 
 		if (max != 0) {
-			int size = (rand() % max) + 1;
-			puzzle[curRow][curCol] = size + '0';
-			number num;
-			num.value = size;
-			num.remaining = size;
-			num.col = curCol;
-			num.row = curRow;
-			num.curDir = 0;
-			numbers.push_back(num);
-			numNumbers++;
-			//Recurse
-			puzzleCreation(puzzle, solutions);
-			if (solutions.size() == 1) {
-				mode = 1;
-				return;
+			vector<int> nums;
+			for (int i = 0; i < max; i++) {
+				nums.push_back(i + 1);
 			}
-			numNumbers--;
-			
-			for (int i = 0; i < numbers.size(); i++) {
-				if (numbers[i].row == num.row && numbers[i].col == num.col) {
-					numbers.erase(numbers.begin() + i);
+			//Randomly pick sizes until we are out of them and we know this path is bad.
+			while (!nums.empty()) {
+				int idx = (rand() % nums.size());
+				int size = nums[idx];
+				nums.erase(nums.begin() + idx);
+				puzzle[curRow][curCol] = size + '0';
+				number num;
+				num.value = size;
+				num.remaining = size;
+				num.col = curCol;
+				num.row = curRow;
+				num.curDir = 0;
+				numbers.push_back(num);
+				numNumbers++;
+				//Recurse
+				puzzleCreation(puzzle, solutions);
+				if (solutions.size() == 1) {
+					mode = 1;
+					return;
+				}
+				numNumbers--;
+
+				for (int i = 0; i < numbers.size(); i++) {
+					if (numbers[i].row == num.row && numbers[i].col == num.col) {
+						numbers.erase(numbers.begin() + i);
+					}
 				}
 			}
+			vector<int>().swap(nums);
 		}
 		vector<int>().swap(cord);
 		vector<int>().swap(avaiableCords[idx]);
