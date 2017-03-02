@@ -3,19 +3,19 @@
 // Rules and puzzles can be found at http://puzzlepicnic.com/genre?id=51.
 // Author: Bryson McIver
 // Created: 2/3/2017
-// Last Update: 2/28/2017
+// Last Update: 3/2/2017
 //
 //  Adding human strategy to look if a a number needs to use a space to complete itself
 //  Currently for speeding up creation pruning, but should be easy to move into the backtracker once it works
 //
 //	Outputs solution to solution.txt and a fresh clean board at original.txt
 //
-//  10% Sure Puzzle Creation takes up more memory than it really needs, working on it.
 //  Puzzle creation now works though! Supports partially made puzzles! Finishes creation for you! Create from scratch!
 //  Run with puzzle.txt in the normal format, but put all x in for the grid (or a partial creation) and select option 4 in the menu.
 //  Example currently in puzzle.txt
 //
-//  Note: Creation can take a long time, there's a lot of branching, some of which is pretty random. 6x6 seems to take anywhere between 1 and 10 minutes.
+//  Note: Creation can take a long time, there's a lot of branching, some of which is pretty random. 6x6 seems to take anywhere between 1 and 5 minutes.
+//        Ideas for improvement on creation would be appreciated.
 //
 // Aditional Details:
 //  Only supports single digit numbers in the grid.
@@ -444,12 +444,6 @@ int** needySquares(int** squares, number currNum) {
 			returnBoard = boardRight;
 		}
 		//Compare with board right if we can
-
-		//LOOP BOARDS
-		//CHECK IF SPOT IS EQUIV
-		//IF EQUIV KEEP
-		//ELSE TURN TO -1
-		//I THINK
 
 		else if (boardRight != NULL) {
 			for (int i = 0; i < numRows; i++) {
@@ -1069,7 +1063,6 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 		}
 	}
 
-
 	//Update remaining values of puzzle.
 	updateRemaining(puzzle);
 	//Not valid, don't continue
@@ -1084,6 +1077,10 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 	backtracker(solutions, puzzle);
 	if (solutions.size() == 1) {
 		mode = 1;
+		for (int n = 0; n < numCols; n++) {
+			delete[]puzzle[n];
+		}
+		delete[]puzzle;
 		return;
 	}
 	solutions.clear();
@@ -1270,6 +1267,11 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 						if ((requiredSquares[m][i][j] == 6 && requiredSquares[n][i][j] == 6)) {
 							//Two numbers needed same square (both set to six) baillll
 							for (int n = 0; n < numNumbers; n++) {
+								if (requiredSquares[n] != NULL) {
+									for (int m = 0; m < numCols; m++) {
+										delete[]requiredSquares[n][m];
+									}
+								}
 								delete[]requiredSquares[n];
 							}
 							delete[]requiredSquares;
@@ -1292,6 +1294,11 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 	}
 
 	for (int n = 0; n < numNumbers; n++) {
+		if (requiredSquares[n] != NULL) {
+			for (int m = 0; m < numCols; m++) {
+				delete[]requiredSquares[n][m];
+			}
+		}
 		delete[]requiredSquares[n];
 	}
 	delete[]requiredSquares;
@@ -1363,6 +1370,11 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 				delete[]squares[n];
 			}
 			delete[]squares;
+			for (int n = 0; n < numCols; n++) {
+				delete[]puzzle[n];
+			}
+			delete[]puzzle;
+			delete[]spaceUsed;
 			return;
 		}
 		//Max is wrong
@@ -1393,6 +1405,11 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 				puzzleCreation(puzzle, solutions);
 				if (solutions.size() == 1) {
 					mode = 1;
+					for (int n = 0; n < numCols; n++) {
+						delete[]puzzle[n];
+					}
+					delete[]puzzle;
+					delete[]spaceUsed;
 					return;
 				}
 				numNumbers--;
