@@ -6,8 +6,8 @@
 // Last Update: 3/2/2017
 //
 //  Adding human strategy to look if a a number needs to use a space to complete itself
-//  Currently for speeding up creation pruning, but should be easy to move into the backtracker once it works
-//
+//  Currently for speeding up creation pruning, but should be easy to move into the backtracker once it work
+//  
 //	Outputs solution to solution.txt and a fresh clean board at original.txt
 //
 //  Puzzle creation now works though! Supports partially made puzzles! Finishes creation for you! Create from scratch!
@@ -319,6 +319,7 @@ int** needySquares(int** squares, number currNum) {
 
 	if (numCopy.remaining == -1) {
 		//This is a complete state and has been marked up.
+		printSquares(newSquares);
 		return newSquares;
 	}
 	else {
@@ -333,8 +334,9 @@ int** needySquares(int** squares, number currNum) {
 			if (tempRemain == 0) {
 				break;
 			}
-			if (newSquares[n][curCol] == -1) {
+			if (newSquares[n][curCol] == -1 || newSquares[n][curCol] == 5) {
 				newSquares[n][curCol] = 6;
+				printSquares(newSquares);
 				boardUp = needySquares(newSquares, numCopy);
 				newSquares[n][curCol] = -1;
 				break;
@@ -362,7 +364,7 @@ int** needySquares(int** squares, number currNum) {
 			if (tempRemain == 0) {
 				break;
 			}
-			if (newSquares[curRow][n] == -1) {
+			if (newSquares[curRow][n] == -1 || newSquares[curRow][n] == 5) {
 				newSquares[curRow][n] = 6;
 				boardRight = needySquares(newSquares, numCopy);
 				newSquares[curRow][n] = -1;
@@ -389,7 +391,7 @@ int** needySquares(int** squares, number currNum) {
 			if (tempRemain == 0) {
 				break;
 			}
-			if (newSquares[n][curCol] == -1) {
+			if (newSquares[n][curCol] == -1 || newSquares[n][curCol] == 5) {
 				newSquares[n][curCol] = 6;
 				boardUp = needySquares(newSquares, numCopy);
 				newSquares[n][curCol] = -1;
@@ -416,7 +418,7 @@ int** needySquares(int** squares, number currNum) {
 			if (tempRemain == 0) {
 				break;
 			}
-			if (newSquares[curRow][n] == -1) {
+			if (newSquares[curRow][n] == -1 || newSquares[curRow][n] == 5) {
 				newSquares[curRow][n] = 6;
 				boardLeft = needySquares(newSquares, numCopy);
 				newSquares[curRow][n] = -1;
@@ -1239,19 +1241,6 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 		}
 	}
 
-	vector<vector<int>> avaiableCords;
-	//Check to see if a space can't be reached (Essentially another is valid check with a new criteria)
-	for (int m = 0; m < numRows; m++) {
-		for (int n = 0; n < numCols; n++) {
-			if (squares[m][n] == -1) {
-				vector<int> cord;
-				cord.push_back(m);
-				cord.push_back(n);
-				avaiableCords.push_back(cord);
-			}
-		}
-	}
-
 	//Call funcion to find squares that need to be touched by certain numbers, 
 	//We can use this added info to the squares matrix to limit the max of our new number to avoid these spots.
 	//The looping is so that we can update each number, but use recursion easily in this friendly healper function
@@ -1284,11 +1273,26 @@ void puzzleCreation(char** puzzleState, vector<char**> &solutions) {
 								delete[]puzzle[n];
 							}
 							delete[]puzzle;
-							vector<vector<int>>().swap(avaiableCords);
 							return;
+						}
+						else if (requiredSquares[m][i][j] == 6 || requiredSquares[n][i][j] == 6) {
+							squares[i][j] = 6;
 						}
 					}
 				}
+			}
+		}
+	}
+
+	vector<vector<int>> avaiableCords;
+	//Check to see if a space can't be reached
+	for (int m = 0; m < numRows; m++) {
+		for (int n = 0; n < numCols; n++) {
+			if (squares[m][n] == -1) {
+				vector<int> cord;
+				cord.push_back(m);
+				cord.push_back(n);
+				avaiableCords.push_back(cord);
 			}
 		}
 	}

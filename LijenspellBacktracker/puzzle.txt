@@ -1,11 +1,5 @@
-10 10
-xxxxxxxxxx
-x4>>xxxxxx
-xv6>>>xxxx
-xvv8>>>>xx
-xxvvxxx^^x
-xxvvxxx^^x
-xxxvxxx^^x
-xxxv<<<6^x
-xxxx<<<<8x
-xxxxxxxxxx
+4 4
+6xxx
+xxxx
+xxxx
+xxxx
