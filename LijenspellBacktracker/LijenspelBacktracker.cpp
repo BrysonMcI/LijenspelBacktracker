@@ -34,6 +34,7 @@
 #include <math.h>
 using namespace std;
 
+
 //Useful globals
 int numRows;
 int numCols;
