@@ -1,7 +1,5 @@
-6 6
-xxxxx8
-3xxxxx
-xxxx8x
-xx3xxx
-x3xxx1
-xxx3xx
+4 4
+6xxx
+x1xx
+xxx4
+x1xx
